@@ -1358,7 +1358,7 @@ To control costs:
 The UI includes an optional OpenAI API key field so advanced users can run the session with their own key.
 
 ---
-```md
+
 ## 📸 Screenshots
 
 ![Chatbot](screenshots/shaileshgpt-preview.png)
