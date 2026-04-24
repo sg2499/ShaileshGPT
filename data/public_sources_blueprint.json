@@ -1,0 +1,43 @@
+{
+  "documents": [
+    {
+      "doc_id": "github_profile_2026",
+      "title": "GitHub Profile Snapshot",
+      "source_type": "public_profile",
+      "origin": "Public GitHub profile summary",
+      "url": "https://github.com/sg2499",
+      "text": "The GitHub profile is under the username sg2499 and the profile name Shailesh Gupta. The visible headline describes him as Data Scientist, ex-Teleperformance, with Python, PySpark, Azure, and MDSAI at IIT Roorkee. The profile shows 18 repositories. Pinned repositories visible include Deep-Research-Agent, OpenAI-Enhanced-QA-ChatBot, Udemy-Course-Recommendation-System, Movie-Recommender-System, IPL-Win-Probability-Predictor, and Stock-Price-Predictor. The Deep-Research-Agent repository description says it is an agentic deep research system that asks clarifying questions, plans targeted web searches, synthesizes structured evidence, and generates professional long-form reports with optional email delivery. The OpenAI-Enhanced-QA-ChatBot description says it is a Streamlit-based chatbot powered by OpenAI and LangChain with chat history, streaming responses, customizable prompts, and a clean interface. The Udemy recommender is described as a Streamlit web application recommending Udemy courses based on user input using NLP and cosine similarity. The Movie Recommender System is described as a Streamlit-based recommendation system using similarity on movie metadata. The IPL project is described as using ball-by-ball IPL data to predict the winning probability of the chasing team in a T20 match. The Stock Price Predictor is described as a Streamlit app forecasting stock prices using an LSTM model trained on Yahoo Finance data."
+    },
+    {
+      "doc_id": "blog_home_2026",
+      "title": "Prismatic Metrics Blog Home",
+      "source_type": "public_profile",
+      "origin": "Public blog home summary",
+      "url": "https://prismatic-metrics.blogspot.com/",
+      "text": "Prismatic Metrics is presented as the portfolio blog of Shailesh Gupta, Data Scientist, with a passion for turning data into decisions. The blog introduction says readers can explore real-world ML and AI projects, insights on Python, PySpark, Deep Learning, and tips for aspiring data professionals. It is explicitly framed as built for recruiters, learners, and anyone curious about the power of data. Visible posts include Deep Research Agent, Movie Recommender System, and Stock Price Predictor."
+    },
+    {
+      "doc_id": "deep_research_blog_2026",
+      "title": "Deep Research Agent Blog Post",
+      "source_type": "public_project_writeup",
+      "origin": "Public blog post summary",
+      "url": "https://prismatic-metrics.blogspot.com/2026/04/deep-research-agent-author-shailesh.html",
+      "text": "The Deep Research Agent blog post explains that the project is an agentic Deep Research Assistant built using Gradio, OpenAI Agents SDK, Web Search, Pydantic, and SendGrid. The write-up says that unlike a simple chatbot that gives one quick answer, the system behaves more like a structured research assistant. It checks whether the user's query is clear enough, asks three to four clarifying questions when necessary, creates a targeted research plan, performs multiple web searches, collects structured evidence, and finally generates a detailed long-form report. The post says the system uses an orchestrator-agent architecture where a top-level manager coordinates specialized agents for clarification, planning, searching, writing, and delivery. The stated purpose is to simulate how a real AI-powered research workflow should operate step by step with reasoning, structure, evidence, and synthesis."
+    },
+    {
+      "doc_id": "website_positioning_2026",
+      "title": "Portfolio Website Positioning",
+      "source_type": "public_profile",
+      "origin": "Public website title and positioning",
+      "url": "https://personal-portfolio-ten-virid-75.vercel.app/",
+      "text": "The public website is titled 'Shailesh Gupta | Data Scientist & AI Engineer'. It functions as a central portfolio hub connecting work experience, projects, and external presence. This positioning reinforces the profile as someone bridging classical data science and modern AI engineering rather than choosing only one of those identities."
+    },
+    {
+      "doc_id": "personal_context_2026",
+      "title": "User-Provided Personal Context",
+      "source_type": "direct_user_input",
+      "origin": "Conversation-provided details",
+      "text": "Shailesh says his hobbies include cricket, gym, music, gaming, food, travel, and spending quality time with family and friends. He specifically describes himself as a rock music fanatic while also listening to English, Hindi, and techno music depending on what interests him. He says he is a cricket freak, follows the NBA, football, and Formula 1, and is a cricketer himself who plays regularly. He describes himself as a gym freak who likes to keep his body fit. On domains and topics, he says he enjoys anything related to data science, AI, and the growing world of AI, and that he is always up for a debate on sports because he is a stats geek. On industries, he wants to work in data science, IT, and any industry where his skills are relevant. For strengths and values, he describes himself as sincere, versatile, a smart worker, a hard worker when necessary, a multi-tasker, able to handle pressure, unfazed under tough circumstances, with leadership qualities, and a team player who tries to lighten the mood around him. Fun facts he supplied include: the fastest way to his heart is through cricket; if he finds you sweating it out in a gym then he is there to spot you; and whenever you need a good all-rounder to save your day, just give him a call."
+    }
+  ]
+}

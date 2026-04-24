@@ -1,0 +1,491 @@
+{
+  "identity": {
+    "name": "Shailesh Gupta",
+    "headline": "Data Scientist | Aspiring AI / LLM Engineer",
+    "location": "Kolkata, West Bengal, India",
+    "email": "shaileshgupta841@gmail.com",
+    "phone": "+91 7980919518",
+    "linkedin": "https://www.linkedin.com/in/shailesh-gupta-7b7278188",
+    "github": "https://github.com/sg2499",
+    "website": "https://personal-portfolio-ten-virid-75.vercel.app/",
+    "blog": "https://prismatic-metrics.blogspot.com/",
+    "current_status": "Open to Work",
+    "positioning": "Results-driven Data Scientist with production ML experience, now moving deeper into AI Engineering, LLM systems, agentic workflows, and RAG-based applications."
+  },
+  "professional_summary": [
+    "Shailesh Gupta is a Data Scientist with around two years of industry experience building and deploying machine learning systems, especially in business-facing settings where model output has to translate into action.",
+    "His profile is strongest at the intersection of applied machine learning, deployable AI products, and modern AI engineering. He already has industry exposure to credit risk and attrition modeling, and is actively building portfolio projects around LLMs, agentic systems, deep research workflows, NLP, and recommendation engines.",
+    "One of the most distinctive things about his profile is that he does not stop at notebooks. His public work repeatedly turns technical ideas into user-facing products with interfaces, deployment stories, portfolio write-ups, and recruiter-friendly explanations.",
+    "He is aiming for roles where analytical depth, engineering practicality, and product thinking matter together: Data Scientist, Applied AI Engineer, ML Engineer, AI Engineer, LLM Engineer, or similar positions where real business value has to be shipped."
+  ],
+  "skills": {
+    "machine_learning_and_ai": [
+      "Supervised Learning",
+      "Unsupervised Learning",
+      "Regression",
+      "Classification",
+      "NLP",
+      "Time Series Forecasting",
+      "Decision Trees",
+      "Random Forests",
+      "Isolation Forests",
+      "LLMs",
+      "Generative AI",
+      "LangChain",
+      "Hugging Face Transformers",
+      "RAG pipelines",
+      "Prompt Engineering",
+      "basic agentic workflows"
+    ],
+    "deep_learning": [
+      "ANN",
+      "CNN",
+      "RNN",
+      "LSTM",
+      "Transformers",
+      "TensorFlow",
+      "Keras"
+    ],
+    "programming_and_libraries": [
+      "Python",
+      "SQL",
+      "Pandas",
+      "NumPy",
+      "Scikit-learn",
+      "TensorFlow",
+      "Keras",
+      "Streamlit",
+      "Gradio",
+      "Pydantic"
+    ],
+    "big_data_and_cloud": [
+      "PySpark",
+      "Azure Databricks",
+      "Azure Data Factory",
+      "ADF",
+      "Delta Lake",
+      "Distributed Data Processing",
+      "Azure DevOps"
+    ],
+    "mlops_and_deployment": [
+      "ML pipelines",
+      "model versioning",
+      "batch inference",
+      "REST APIs",
+      "FastAPI",
+      "workflow automation",
+      "CI/CD integration",
+      "Git",
+      "Version Control"
+    ],
+    "databases_and_analytics": [
+      "MySQL",
+      "Oracle SQL",
+      "Advanced SQL",
+      "Joins",
+      "Subqueries",
+      "Window Functions",
+      "Power BI"
+    ],
+    "top_of_mind_linkedin_skills": [
+      "OpenAI API",
+      "Fine Tuning",
+      "AI Agents"
+    ]
+  },
+  "experience": [
+    {
+      "company": "Teleperformance",
+      "role": "Data Scientist",
+      "location": "Gurugram",
+      "duration": "June 2022 - April 2024",
+      "highlights": [
+        "Engineered and deployed predictive ML models for credit collection risk, helping optimize outreach priorities and improve contact-to-collection outcomes.",
+        "Developed employee attrition prediction models so HR stakeholders could identify churn risk and intervene earlier with retention strategies.",
+        "Architected and automated end-to-end ML pipelines using Azure Databricks, PySpark, Delta Lake, and Azure Data Factory for ingestion, feature engineering, training, and batch inference.",
+        "Worked across Operations, HR, and Strategy teams, which means his data science experience is grounded in real stakeholder needs rather than isolated experimentation.",
+        "Built a profile around production-oriented data science with scalable data processing and delivery, not only modeling."
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Indian Institute of Technology, Roorkee",
+      "program": "Executive Post Graduate Program in Data Science & AI",
+      "status": "2024 - 2025",
+      "notes": "Focused on advanced data science, machine learning, AI applications, and the transition toward more specialized AI and LLM engineering work."
+    },
+    {
+      "institution": "IIIT Bangalore",
+      "program": "Executive Program in Data Science",
+      "status": "2021 - 2022",
+      "notes": "Applied data science education that strengthened core foundations."
+    },
+    {
+      "institution": "KIIT University, Bhubaneswar",
+      "program": "B.Tech in Electronics & Telecommunication / Electrical, Electronics and Communications Engineering",
+      "status": "2018 - 2022",
+      "notes": "Engineering background that supports his analytical and systems-oriented style."
+    }
+  ],
+  "certifications": [
+    "AI Engineer Core Track: LLM Engineering, RAG, QLoRA, Agents — Udemy — Issued Apr 2026",
+    "Executive Post Graduate Certification in Data Science & Artificial Intelligence — IIT Roorkee — Issued Dec 2025",
+    "Power BI — Intellipaat — Issued May 2025",
+    "Microsoft SQL — Intellipaat — Issued Aug 2024",
+    "Data Science — Intellipaat — Issued Aug 2024",
+    "Artificial Intelligence — Intellipaat — Issued May 2025",
+    "SQL Using AI — AI for Techies — Issued Jul 2025"
+  ],
+  "projects": [
+    {
+      "name": "Deep Research Agent",
+      "summary": "A flagship multi-agent research assistant that behaves more like a structured research workflow than a one-shot chatbot.",
+      "problem": "The goal was to simulate how a serious AI research workflow should operate: clarify user intent, plan investigation, search deliberately, gather evidence, and synthesize a useful final output.",
+      "stack": [
+        "Python",
+        "Gradio",
+        "OpenAI Agents SDK",
+        "Pydantic",
+        "Web Search",
+        "SendGrid"
+      ],
+      "highlights": [
+        "Uses an orchestrator-style multi-agent design with specialist roles for clarification, planning, search, report writing, and delivery.",
+        "Built to create evidence-backed long-form outputs rather than thin chatbot responses.",
+        "Strong showcase for agentic system design, workflow orchestration, and AI product thinking.",
+        "Positioned as one of the most mature and portfolio-defining projects in his body of work."
+      ],
+      "tags": [
+        "LLM",
+        "AI Agents",
+        "Research Assistant",
+        "Gradio",
+        "Portfolio Flagship"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/Deep-Research-Agent",
+        "blog": "https://prismatic-metrics.blogspot.com/2026/04/deep-research-agent-author-shailesh.html",
+        "website": "https://personal-portfolio-ten-virid-75.vercel.app/"
+      }
+    },
+    {
+      "name": "OpenAI-Enhanced QA ChatBot",
+      "summary": "A Streamlit-based chatbot powered by OpenAI and LangChain with chat history, streaming responses, and configurable prompting.",
+      "problem": "To build a cleaner user-facing conversational app that demonstrates prompt orchestration and LLM-enhanced Q&A.",
+      "stack": [
+        "Python",
+        "Streamlit",
+        "OpenAI",
+        "LangChain"
+      ],
+      "highlights": [
+        "Shows strong interest in conversational AI products.",
+        "Bridges classic app UI thinking with modern LLM interaction patterns."
+      ],
+      "tags": [
+        "LLM",
+        "Chatbot",
+        "Streamlit"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/OpenAI-Enhanced-QA-ChatBot"
+      }
+    },
+    {
+      "name": "Udemy Course Recommendation System",
+      "summary": "A content-based NLP recommender that suggests relevant Udemy courses based on user input using TF-IDF and cosine similarity.",
+      "problem": "To show how semantic similarity and NLP can power practical recommendation use cases.",
+      "stack": [
+        "Python",
+        "TF-IDF",
+        "Cosine Similarity",
+        "Streamlit"
+      ],
+      "highlights": [
+        "Includes an interactive dashboard for exploratory insights.",
+        "Demonstrates recommendation logic, text processing, and product packaging."
+      ],
+      "tags": [
+        "NLP",
+        "Recommendation System",
+        "Streamlit"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/Udemy-Course-Recommendation-System"
+      }
+    },
+    {
+      "name": "Movie Recommender System",
+      "summary": "A content-based movie recommender built with Streamlit and similarity on movie metadata.",
+      "problem": "To provide top similar movie suggestions from metadata such as genres, cast, crew, and keywords.",
+      "stack": [
+        "Python",
+        "TF-IDF",
+        "Cosine Similarity",
+        "Streamlit"
+      ],
+      "highlights": [
+        "Built as a user-facing recommendation product rather than a pure notebook exercise.",
+        "Shows ability to connect data preparation, modeling logic, and front-end interaction."
+      ],
+      "tags": [
+        "Recommender",
+        "NLP",
+        "Streamlit"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/Movie-Recommender-System",
+        "blog": "https://prismatic-metrics.blogspot.com/"
+      }
+    },
+    {
+      "name": "IPL Win Probability Predictor",
+      "summary": "A cricket analytics app that predicts win probability ball-by-ball for a chasing team in a T20 match.",
+      "problem": "To use historical ball-by-ball match data and match-state features to estimate live winning chances.",
+      "stack": [
+        "Python",
+        "Scikit-learn",
+        "Streamlit",
+        "Cricket analytics"
+      ],
+      "highlights": [
+        "Combines sports passion with ML application design.",
+        "A strong example of domain enthusiasm turning into a data product."
+      ],
+      "tags": [
+        "Sports Analytics",
+        "Classification",
+        "Streamlit"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/IPL-Win-Probability-Predictor"
+      }
+    },
+    {
+      "name": "Stock Price Predictor",
+      "summary": "A Streamlit stock forecasting app using LSTM on Yahoo Finance data.",
+      "problem": "To forecast stock prices and visualize historical trends, moving averages, and predicted-vs-actual comparisons.",
+      "stack": [
+        "Python",
+        "LSTM",
+        "TensorFlow",
+        "Keras",
+        "yfinance",
+        "Streamlit",
+        "Matplotlib"
+      ],
+      "highlights": [
+        "Demonstrates time-series forecasting, deep learning, and clean UI presentation.",
+        "Blends technical modeling with visual analytics."
+      ],
+      "tags": [
+        "Time Series",
+        "Deep Learning",
+        "Finance"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/Stock-Price-Predictor"
+      }
+    },
+    {
+      "name": "Campus Placement Predictor",
+      "summary": "A Streamlit app that predicts placement outcome based on academic and related features.",
+      "problem": "To estimate placement likelihood in an EdTech / HRTech-style scenario using classification models.",
+      "stack": [
+        "Python",
+        "Random Forest",
+        "Streamlit"
+      ],
+      "highlights": [
+        "A practical supervised learning use case with direct student/employability framing.",
+        "Illustrates classification workflow and accessible UI design."
+      ],
+      "tags": [
+        "Classification",
+        "EdTech",
+        "HRTech"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/Campus-Placement-Predictor"
+      }
+    },
+    {
+      "name": "Customer Churn & Salary Prediction using ANN",
+      "summary": "A dual ANN-based project covering customer churn prediction and salary estimation/classification style tasks.",
+      "problem": "To demonstrate end-to-end neural network workflows for business-style prediction problems.",
+      "stack": [
+        "Python",
+        "ANN",
+        "Keras",
+        "TensorFlow",
+        "Streamlit"
+      ],
+      "highlights": [
+        "Shows deep learning fundamentals applied to tabular data problems.",
+        "Highlights preprocessing, encoding, scaling, training, and UI packaging."
+      ],
+      "tags": [
+        "Deep Learning",
+        "ANN",
+        "Business ML"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/Customer-Churn-and-Salary-Prediction-ANN"
+      }
+    },
+    {
+      "name": "IMDB Sentiment Analysis using RNN",
+      "summary": "An NLP sentiment classifier built using a recurrent neural network and deployed with Streamlit.",
+      "problem": "To classify movie reviews as positive or negative using a recurrent architecture and text preprocessing pipeline.",
+      "stack": [
+        "Python",
+        "RNN",
+        "TensorFlow",
+        "Keras",
+        "NLP",
+        "Streamlit"
+      ],
+      "highlights": [
+        "Shows competence in sequence modeling and deployed NLP apps.",
+        "Good example of deep learning beyond purely tabular use cases."
+      ],
+      "tags": [
+        "NLP",
+        "Sentiment Analysis",
+        "RNN"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/IMDB-Sentiment-Analysis-using-Simple-RNN"
+      }
+    },
+    {
+      "name": "Hamlet Next Word Prediction using LSTM",
+      "summary": "A next-word prediction project on Shakespeare's Hamlet using LSTM-based sequence modeling.",
+      "problem": "To demonstrate sequence modeling and language-generation fundamentals using literary text.",
+      "stack": [
+        "Python",
+        "LSTM",
+        "TensorFlow",
+        "Keras",
+        "NLP"
+      ],
+      "highlights": [
+        "Highlights interest in language modeling concepts.",
+        "Adds depth to the NLP and sequence-learning side of the profile."
+      ],
+      "tags": [
+        "Language Modeling",
+        "LSTM",
+        "NLP"
+      ],
+      "links": {
+        "github": "https://github.com/sg2499/Hamlet-Next-Word-Prediction-LSTM"
+      }
+    }
+  ],
+  "public_presence": [
+    "The website positions him as 'Shailesh Gupta | Data Scientist & AI Engineer' and acts as a portfolio hub for projects, experience, and contact touchpoints.",
+    "The GitHub profile emphasizes his background as a Data Scientist, ex-Teleperformance professional, and builder of practical ML and AI applications with Python, PySpark, and Azure exposure.",
+    "The blog 'Prismatic Metrics' serves as a portfolio-oriented publication space where he explains projects, shares AI/ML work, and gives recruiters or learners more context than a resume alone can provide.",
+    "His public presence is intentionally recruiter-friendly: portfolio website, GitHub, blog, and LinkedIn-style showcasing all reinforce one another rather than existing as disconnected pieces."
+  ],
+  "interests": [
+    "Cricket is not just a casual hobby for Shailesh; it is one of the clearest parts of his personality. He follows the sport deeply, plays regularly himself, and gravitates naturally toward the statistics, momentum shifts, and game intelligence that make cricket analytically rich.",
+    "Beyond cricket, he also follows the NBA, football, and Formula 1. Sports are one of the easiest ways to connect with him because he enjoys both the emotional side of competition and the numbers behind performance, tactics, and results.",
+    "Fitness is a major part of his lifestyle. He is a gym enthusiast who likes to stay in shape and takes training seriously, so discipline, consistency, and self-improvement are not just work themes for him; they show up in his everyday routine too.",
+    "Music is another strong personal anchor. He is a rock music fanatic but also enjoys English, Hindi, and techno playlists depending on mood, energy, and setting.",
+    "He enjoys gaming, food, travel, and spending quality time with family and friends. That combination gives him a profile that is ambitious and technical, but still social, energetic, and easy to engage with beyond work topics.",
+    "Because he is both a sports lover and a stats geek, he naturally enjoys debates, comparisons, and performance analysis, especially when sports and numbers overlap."
+  ],
+  "personal_profile": [
+    "Shailesh comes across as someone who combines analytical seriousness with a lively, approachable personality. He likes to keep the vibe around him positive and does not carry himself like a purely dry technical professional.",
+    "He is the type of person who enjoys building things, talking through ideas, debating sports, and switching comfortably between serious technical discussion and relaxed personal conversation.",
+    "His personal interests fit his professional identity surprisingly well: sports, statistics, gaming, music, and travel all reflect curiosity, pattern recognition, energy, and enthusiasm."
+  ],
+  "target_roles_and_industries": [
+    "The most obvious fit for Shailesh is in Data Science, Applied AI, AI Engineering, ML Engineering, or LLM-focused roles where he can combine machine learning foundations with newer GenAI and agentic workflows.",
+    "He is open to IT and other industries where his analytics, machine learning, Python, NLP, recommendation, forecasting, and modern AI skills are relevant. The better the role rewards practical problem-solving and solution building, the stronger the fit.",
+    "Industries that could make strong use of his profile include technology products, AI tooling, analytics-driven consulting, fintech, HR analytics, sports analytics, recommendation systems, and any digital business environment that values deployable intelligent systems."
+  ],
+  "strengths_and_values": [
+    "He describes himself as sincere, versatile, and capable of being both a smart worker and a hard worker depending on what the situation demands.",
+    "He is comfortable handling pressure and does not get easily fazed under tough circumstances, which pairs well with production-style work and deadline-driven environments.",
+    "He sees himself as a team player with leadership qualities, someone who can multitask effectively and still keep people around him engaged and motivated.",
+    "A recurring personal trait is that he tries to uplift the mood around him. That means his value is not limited to technical output; he also cares about the energy and momentum of the people he works with."
+  ],
+  "fun_facts": [
+    "The fastest way to his heart is through cricket.",
+    "If he sees someone sweating it out in the gym, he will happily spot them.",
+    "A good way to describe him in one phrase is 'a useful all-rounder' — the kind of person who can contribute across technical work, team energy, and problem-solving.",
+    "He is the kind of portfolio owner who can discuss agentic RAG one minute and sports stats the next without losing enthusiasm."
+  ],
+  "faq_entries": [
+    {
+      "question": "What kind of roles is Shailesh targeting?",
+      "answer": "He is targeting Data Scientist, Applied AI Engineer, ML Engineer, AI Engineer, and LLM-oriented roles where practical machine learning and modern AI system design both matter."
+    },
+    {
+      "question": "What is his most standout project?",
+      "answer": "The Deep Research Agent is one of his strongest flagship projects because it showcases multi-agent orchestration, structured research, long-form synthesis, and practical AI product design."
+    },
+    {
+      "question": "Does he have real industry experience or only portfolio work?",
+      "answer": "He has real industry experience as a Data Scientist at Teleperformance, where he worked on credit collection risk, attrition prediction, and scalable ML pipelines in Azure Databricks and PySpark."
+    },
+    {
+      "question": "What makes him interesting beyond work?",
+      "answer": "He is deeply into cricket, follows multiple sports, is serious about fitness, enjoys music across several moods, and likes gaming, food, travel, and quality time with family and friends."
+    }
+  ],
+  "conversation_guidelines": {
+    "tone": "Professional, warm, polished, and grounded. Confident but never inflated.",
+    "behavior": [
+      "Answer as a trustworthy portfolio assistant, not as a generic AI.",
+      "Stay grounded in the provided profile data and source documents.",
+      "Never hallucinate or overstate seniority, impact, or credentials.",
+      "When relevant, connect professional strengths to public projects and visible work.",
+      "If evidence is partial, say that clearly instead of guessing.",
+      "For recruiter or collaborator questions, be helpful and inviting without sounding desperate."
+    ]
+  },
+  "suggested_questions": [
+    "What kind of AI and ML work has Shailesh done?",
+    "Tell me about his industry experience at Teleperformance.",
+    "Which project best represents his move into LLM engineering?",
+    "What are his strongest technical skills right now?",
+    "What makes him a good fit for Applied AI roles?",
+    "What is he like outside work?"
+  ],
+  "knowledge_map": [
+    {
+      "title": "Career & impact",
+      "description": "Industry work at Teleperformance, production ML pipelines, risk and attrition modeling, and cross-functional delivery."
+    },
+    {
+      "title": "AI & ML stack",
+      "description": "Python, SQL, PySpark, Azure Databricks, TensorFlow, Keras, LangChain, Hugging Face, RAG, prompt engineering, and agentic workflows."
+    },
+    {
+      "title": "Portfolio projects",
+      "description": "Deep Research Agent, recommender systems, sports analytics, NLP apps, stock forecasting, and deployed Streamlit/Gradio showcases."
+    },
+    {
+      "title": "Public presence",
+      "description": "Website, GitHub, blog, and LinkedIn-style profile details that reinforce the same portfolio narrative."
+    },
+    {
+      "title": "Personality & interests",
+      "description": "Cricket, gym, rock music, gaming, travel, food, sports debates, and a positive team vibe."
+    },
+    {
+      "title": "Fit & collaboration",
+      "description": "Target roles, work style, strengths under pressure, teamwork, and what kind of environment suits him best."
+    }
+  ],
+  "source_notes": [
+    "Use resume and profile PDFs as the most authoritative sources for experience, education, skills, and certifications.",
+    "Use public GitHub/blog/website summaries to enrich project and public-presence answers, but do not invent details beyond what is visible.",
+    "Use user-provided personal details for hobbies, personality, strengths, and fun facts."
+  ]
+}
