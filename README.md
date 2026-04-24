@@ -1361,9 +1361,19 @@ The UI includes an optional OpenAI API key field so advanced users can run the s
 
 ## 📸 Screenshots
 
-![Chatbot](screenshots/shaileshgpt-preview.png)
+### 1. ShaileshGPT Chatbot Interface
 
-![JD Fit Analysis](screenshots/jd-analysis-fit.png)
+This screenshot shows the main ShaileshGPT chatbot interface where users can ask questions about Shailesh’s experience, skills, projects, certifications, and personality.
+
+![ShaileshGPT Chatbot Interface](screenshots/shaileshgpt-preview.png)
+
+---
+
+### 2. Recruiter JD Fit Analysis
+
+This screenshot shows the Recruiter Mode feature where a user can upload a job description and get a structured fit analysis comparing the JD with Shailesh’s profile.
+
+![Recruiter JD Fit Analysis](screenshots/jd-analysis-fit.png)
 
 ---
 
