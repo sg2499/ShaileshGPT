@@ -12,6 +12,23 @@
 
 ---
 
+---
+
+## 🚀 Try the Live Demo
+
+You can try the deployed ShaileshGPT demo on Hugging Face Spaces here:
+
+🔗 **Live Demo:** [ShaileshGPT — AI-Powered Personal Portfolio](https://huggingface.co/spaces/sg2499/ShaileshGPT_-_AI-Powered_Personal_Portfolio)
+
+This demo lets you interact with the chatbot, ask questions about the portfolio, test recruiter-style queries, and explore how the personal AI assistant works.
+
+> ⚠️ **Important API Usage Note**  
+> This project uses paid LLM/API services. If you are testing the bot seriously or running multiple queries, please use your **own OpenAI API key** through the optional API key field available in the app.  
+>  
+> Using your own key is always recommended because it helps control public demo costs and allows you to test the project independently using your own credits.
+
+---
+
 ## 📌 What is ShaileshGPT?
 
 **ShaileshGPT** is a full-stack AI-powered personal portfolio system that turns a static resume website into an interactive, recruiter-ready, AI-driven experience.
