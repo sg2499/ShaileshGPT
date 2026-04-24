@@ -10,7 +10,6 @@
 
 **Repository:** [https://github.com/sg2499/ShaileshGPT](https://github.com/sg2499/ShaileshGPT)
 
----
 
 ---
 
@@ -28,6 +27,7 @@ This demo lets you interact with the chatbot, ask questions about the portfolio,
 > Using your own key is always recommended because it helps control public demo costs and allows you to test the project independently using your own credits.
 
 ---
+
 
 ## 📌 What is ShaileshGPT?
 
