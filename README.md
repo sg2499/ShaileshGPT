@@ -1358,13 +1358,12 @@ To control costs:
 The UI includes an optional OpenAI API key field so advanced users can run the session with their own key.
 
 ---
-
+```md
 ## 📸 Screenshots
 
-```md
-![Chatbot](screenshots/ShaileshGPT Preview.png)
-![JD Fit Analysis](screenshots/JD Analysis Fit.png)
-```
+![Chatbot](screenshots/shaileshgpt-preview.png)
+
+![JD Fit Analysis](screenshots/jd-analysis-fit.png)
 
 ---
 
