@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 from agentic_rag import create_portfolio_bot, get_portfolio_bot
 from lead_utils import capture_lead
 from jd_matcher import extract_text_from_upload, stream_jd_fit
+from analytics_db import create_or_update_visitor, log_interaction
 from build_kb import main as build_kb_main
 
 
@@ -238,7 +239,7 @@ CUSTOM_CSS = """
 }
 
 
-#contact-card, #key-card, #jd-card {
+#contact-card, #key-card, #jd-card, #visitor-card {
   margin-top: 18px;
   padding: 18px;
   border: 1px solid rgba(96,165,250,.18);
@@ -298,6 +299,26 @@ def get_runtime_bot(session_api_key: str | None):
     return BOT
 
 
+def register_visitor(name, email, phone, linkedin, github, website, other_contact):
+    try:
+        visitor = create_or_update_visitor(
+            {
+                "name": name,
+                "email": email,
+                "phone": phone,
+                "linkedin": linkedin,
+                "github": github,
+                "website": website,
+                "other_contact": other_contact,
+                "source": "Hugging Face / Gradio demo",
+            }
+        )
+        msg = f"✅ Thanks, **{visitor['name']}**. You can now use ShaileshGPT. Your questions may be logged to help improve the product."
+        return visitor, msg
+    except Exception as exc:
+        return {}, f"⚠️ {exc}"
+
+
 def save_session_key(api_key: str):
     api_key = (api_key or "").strip()
     if not api_key:
@@ -324,7 +345,11 @@ def submit_lead(name, email, phone, linkedin, github, website, other_contact, me
     return result["message"]
 
 
-def stream_jd_analysis(file_obj, jd_question: str, session_api_key: str | None):
+def stream_jd_analysis(file_obj, jd_question: str, session_api_key: str | None, visitor_state: dict | None):
+    if not visitor_state or not visitor_state.get("visitor_id"):
+        yield "Please enter your name and email in the **Visitor Access** section before using Recruiter Mode."
+        return
+
     if file_obj is None:
         yield "Upload the JD first. Even the best all-rounder needs to know the pitch before batting."
         return
@@ -343,7 +368,15 @@ def stream_jd_analysis(file_obj, jd_question: str, session_api_key: str | None):
             "Open **Connect with Shailesh** below and leave your email, phone, LinkedIn, website, or preferred contact route. "
             "Shailesh will get notified directly — no résumé black hole, no awkward carrier pigeon situation."
         )
-        yield output + cta
+        final_output = output + cta
+        log_interaction(
+            visitor_state["visitor_id"],
+            f"JD upload: {getattr(file_obj, 'name', 'uploaded_jd')} | Question: {jd_question}",
+            answer_preview=final_output,
+            channel="gradio",
+            interaction_type="jd_fit_analysis",
+        )
+        yield final_output
     except Exception as exc:
         yield f"Could not analyze that JD. Error: `{type(exc).__name__}: {exc}`"
 
@@ -380,18 +413,28 @@ WELCOME = (
 )
 
 
-def add_user_message(message: str, history: list[dict[str, str]] | None):
+def add_user_message(message: str, history: list[dict[str, str]] | None, visitor_state: dict | None):
     history = history or []
     message = (message or "").strip()
     if not message:
         return "", history
+    if not visitor_state or not visitor_state.get("visitor_id"):
+        history.append({
+            "role": "assistant",
+            "content": "Please enter your **name and email** in the Visitor Access section before using ShaileshGPT. I promise, no secret handshake required."
+        })
+        return message, history
     history.append({"role": "user", "content": message})
     return "", history
 
 
-def stream_bot_message(history: list[dict[str, str]] | None, session_api_key: str | None) -> Generator[list[dict[str, str]], None, None]:
+def stream_bot_message(history: list[dict[str, str]] | None, session_api_key: str | None, visitor_state: dict | None) -> Generator[list[dict[str, str]], None, None]:
     history = history or []
     if not history or history[-1].get("role") != "user":
+        yield history
+        return
+
+    if not visitor_state or not visitor_state.get("visitor_id"):
         yield history
         return
 
@@ -404,6 +447,13 @@ def stream_bot_message(history: list[dict[str, str]] | None, session_api_key: st
         for token in bot.answer_stream(user_message, chat_history=prior_history):
             history[-1]["content"] += token
             yield history
+        log_interaction(
+            visitor_state["visitor_id"],
+            user_message,
+            answer_preview=history[-1]["content"],
+            channel="gradio",
+            interaction_type="chat_question",
+        )
     except Exception as exc:
         history[-1]["content"] = (
             "I hit a technical snag while answering that. Very dramatic of the backend, I know.\n\n"
@@ -420,7 +470,24 @@ with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS, title=f"{NAME} | Shailesh
     with gr.Column(elem_id="app-shell"):
         gr.HTML(hero_html())
 
+        with gr.Accordion("Visitor Access — required before using ShaileshGPT", open=True, elem_id="visitor-card"):
+            gr.HTML("<div class='small-muted'>Please enter your name and email before using the bot. This helps Shailesh understand who is exploring the product. Your questions may be logged for product insights and follow-up context.</div>")
+            with gr.Row():
+                visitor_name = gr.Textbox(label="Name *", placeholder="Your name")
+                visitor_email = gr.Textbox(label="Email *", placeholder="you@example.com")
+            with gr.Row():
+                visitor_phone = gr.Textbox(label="Phone", placeholder="Optional")
+                visitor_linkedin = gr.Textbox(label="LinkedIn", placeholder="Optional")
+            with gr.Row():
+                visitor_github = gr.Textbox(label="GitHub", placeholder="Optional")
+                visitor_website = gr.Textbox(label="Website", placeholder="Optional")
+            visitor_other = gr.Textbox(label="Other contact", placeholder="Optional")
+            visitor_submit = gr.Button("Start using ShaileshGPT", elem_id="lead-submit")
+            visitor_status = gr.Markdown()
+            visitor_state = gr.State({})
+
         with gr.Column(elem_id="chat-card"):
+
             chatbot = gr.Chatbot(
                 label="ShaileshGPT",
                 value=[{"role": "assistant", "content": WELCOME}],
@@ -487,23 +554,29 @@ with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS, title=f"{NAME} | Shailesh
         gr.HTML("<div id='footer-note'>Designed and Built by Shailesh Gupta.</div>")
 
 
-    msg.submit(add_user_message, [msg, chatbot], [msg, chatbot], queue=False).then(
-        stream_bot_message, [chatbot, session_api_key], [chatbot]
+    visitor_submit.click(
+        register_visitor,
+        [visitor_name, visitor_email, visitor_phone, visitor_linkedin, visitor_github, visitor_website, visitor_other],
+        [visitor_state, visitor_status],
     )
-    send.click(add_user_message, [msg, chatbot], [msg, chatbot], queue=False).then(
-        stream_bot_message, [chatbot, session_api_key], [chatbot]
+
+    msg.submit(add_user_message, [msg, chatbot, visitor_state], [msg, chatbot], queue=False).then(
+        stream_bot_message, [chatbot, session_api_key, visitor_state], [chatbot]
+    )
+    send.click(add_user_message, [msg, chatbot, visitor_state], [msg, chatbot], queue=False).then(
+        stream_bot_message, [chatbot, session_api_key, visitor_state], [chatbot]
     )
 
     for btn in suggestion_buttons:
         btn.click(set_suggestion, inputs=[btn], outputs=[msg], queue=False).then(
-            add_user_message, [msg, chatbot], [msg, chatbot], queue=False
+            add_user_message, [msg, chatbot, visitor_state], [msg, chatbot], queue=False
         ).then(
-            stream_bot_message, [chatbot, session_api_key], [chatbot]
+            stream_bot_message, [chatbot, session_api_key, visitor_state], [chatbot]
         )
 
     jd_analyze.click(
         stream_jd_analysis,
-        [jd_file, jd_question, session_api_key],
+        [jd_file, jd_question, session_api_key, visitor_state],
         [jd_output],
     )
 

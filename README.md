@@ -1,3 +1,9 @@
+---
+title: ShaileshGPT_-_AI-Powered_Personal_Portfolio
+app_file: app.py
+sdk: gradio
+sdk_version: 5.49.1
+---
 # 🚀 ShaileshGPT — AI-Powered Personal Portfolio Assistant
 
 ![GitHub repo size](https://img.shields.io/github/repo-size/sg2499/ShaileshGPT)
@@ -9,7 +15,6 @@
 ![Agentic RAG](https://img.shields.io/badge/Architecture-Agentic%20RAG-purple)
 
 **Repository:** [https://github.com/sg2499/ShaileshGPT](https://github.com/sg2499/ShaileshGPT)
-
 
 ---
 

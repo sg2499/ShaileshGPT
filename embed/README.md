@@ -1,8 +1,10 @@
-# Website embed
+# Website Embed With Mandatory Visitor Tracking
 
-1. Deploy `api_server.py` to a Python host such as Railway, Render, Fly.io, or your own VM.
-2. Serve `embed/widget.js` from your website or a CDN path.
-3. Paste the snippet from `embed-snippet.html` into your portfolio site.
-4. Set `data-api-base` to the deployed API URL.
+This widget requires users to enter name and email before chatting.
 
-The widget opens as a floating chat bubble and talks to the same agentic RAG backend used by the Gradio app.
+1. Deploy `api_server.py`.
+2. Serve `embed/widget.js`.
+3. Paste `embed-snippet.html` into your website.
+4. Set `data-api-base` to your API URL.
+
+The widget records visitor details and every question in the backend SQLite database.
