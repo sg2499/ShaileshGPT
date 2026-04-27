@@ -22,7 +22,7 @@ from agentic_rag import create_portfolio_bot, get_portfolio_bot
 from build_kb import main as build_kb_main
 from lead_utils import capture_lead
 from jd_matcher import evaluate_jd_fit, extract_text_from_upload
-from analytics_db import create_or_update_visitor, export_interactions_csv, export_summary, log_interaction, require_visitor, update_interaction_answer
+from analytics_db import create_or_update_visitor, export_interactions_csv, export_summary, log_interaction, log_usage_event, require_visitor, update_interaction_answer
 
 
 ROOT = Path(__file__).resolve().parent
@@ -47,6 +47,10 @@ def require_user_api_key(request: Request) -> str:
     if not key.startswith("sk-"):
         raise HTTPException(status_code=400, detail="Invalid OpenAI API key format.")
     return key
+
+
+def using_owner_key(request: Request) -> bool:
+    return not bool(request.headers.get("x-openai-api-key", "").strip())
 
 
 def bot_for_request(request: Request):
@@ -256,8 +260,19 @@ def chat_stream(payload: ChatRequest, request: Request) -> StreamingResponse:
             for token in bot_for_request(request).answer_stream(payload.message, chat_history=history):
                 collected.append(token)
                 yield f"data: {json.dumps({'token': token})}\n\n"
+            final_answer = "".join(collected)
             if interaction:
-                update_interaction_answer(interaction["interaction_id"], "".join(collected))
+                update_interaction_answer(interaction["interaction_id"], final_answer)
+                log_usage_event(
+                    visitor_id=payload.visitor_id,
+                    session_id=payload.session_id,
+                    interaction_id=interaction.get("interaction_id", ""),
+                    feature="chat_stream",
+                    model=CHAT_MODEL,
+                    input_text=payload.message + "\n" + json.dumps([m.model_dump() for m in payload.history], ensure_ascii=False),
+                    output_text=final_answer,
+                    used_owner_key=using_owner_key(request),
+                )
             yield f"data: {json.dumps({'done': True})}\n\n"
         except Exception as exc:
             yield f"data: {json.dumps({'error': f'{type(exc).__name__}: {exc}'})}\n\n"
@@ -304,7 +319,7 @@ async def jd_fit(
     try:
         jd_text = extract_text_from_upload(str(tmp_path))
         answer = evaluate_jd_fit(bot_for_request(request), jd_text, question)
-        log_interaction(
+        interaction = log_interaction(
             visitor_id,
             f"JD upload: {file.filename or 'uploaded_jd'} | Question: {question}",
             answer_preview=answer,
@@ -312,6 +327,16 @@ async def jd_fit(
             interaction_type="jd_fit_analysis",
             metadata={"filename": file.filename or "uploaded_jd"},
             session_id=session_id,
+        )
+        log_usage_event(
+            visitor_id=visitor_id,
+            session_id=session_id,
+            interaction_id=interaction.get("interaction_id", ""),
+            feature="jd_fit",
+            model=CHAT_MODEL,
+            input_text=jd_text + "\n" + question,
+            output_text=answer,
+            used_owner_key=using_owner_key(request),
         )
         return {"answer": answer}
     finally:
@@ -343,7 +368,7 @@ async def jd_fit_report(
     try:
         jd_text = extract_text_from_upload(str(tmp_path))
         answer = evaluate_jd_fit(bot_for_request(request), jd_text, question)
-        log_interaction(
+        interaction = log_interaction(
             visitor_id,
             f"Downloadable JD report: {file.filename or 'uploaded_jd'} | Question: {question}",
             answer_preview=answer,
@@ -351,6 +376,16 @@ async def jd_fit_report(
             interaction_type="jd_fit_pdf_report",
             metadata={"filename": file.filename or "uploaded_jd"},
             session_id=session_id,
+        )
+        log_usage_event(
+            visitor_id=visitor_id,
+            session_id=session_id,
+            interaction_id=interaction.get("interaction_id", ""),
+            feature="jd_pdf_report",
+            model=CHAT_MODEL,
+            input_text=jd_text + "\n" + question,
+            output_text=answer,
+            used_owner_key=using_owner_key(request),
         )
         pdf_bytes = build_jd_pdf_report(answer)
         return Response(

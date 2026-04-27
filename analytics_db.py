@@ -71,6 +71,10 @@ def messages_table() -> str:
     return os.getenv("SUPABASE_MESSAGES_TABLE", "conversation_messages").strip() or "conversation_messages"
 
 
+def usage_table() -> str:
+    return os.getenv("SUPABASE_USAGE_TABLE", "usage_events").strip() or "usage_events"
+
+
 def _supabase_base_url() -> str:
     url = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
     if not url:
@@ -228,7 +232,29 @@ def init_sqlite_db() -> None:
 
         conn.execute("CREATE INDEX IF NOT EXISTS idx_interactions_created ON interactions(created_at)")
         conn.execute("CREATE INDEX IF NOT EXISTS idx_interactions_question ON interactions(normalized_question)")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS usage_events (
+                usage_id TEXT PRIMARY KEY,
+                visitor_id TEXT,
+                visitor_name TEXT,
+                visitor_email TEXT,
+                session_id TEXT,
+                interaction_id TEXT,
+                feature TEXT NOT NULL,
+                model TEXT NOT NULL,
+                input_tokens_estimate INTEGER NOT NULL,
+                output_tokens_estimate INTEGER NOT NULL,
+                total_tokens_estimate INTEGER NOT NULL,
+                estimated_cost_usd REAL NOT NULL,
+                used_owner_key INTEGER NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_messages_session ON conversation_messages(session_id)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_usage_created ON usage_events(created_at)")
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_usage_visitor ON usage_events(visitor_id)")
         conn.commit()
 
 
@@ -566,6 +592,146 @@ def update_interaction_answer(interaction_id: str, answer_preview: str) -> None:
         insert_message(visitor_id, session_id, "assistant", answer_preview, interaction_id)
 
 
+
+MODEL_PRICING_USD_PER_1M = {
+    "gpt-4.1-mini": {"input": 0.40, "output": 1.60},
+    "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "gpt-4.1": {"input": 2.00, "output": 8.00},
+    "gpt-4o": {"input": 2.50, "output": 10.00},
+}
+
+
+def estimate_tokens(text: str) -> int:
+    # Lightweight approximation: 1 token ~= 4 characters.
+    return max(1, int(len(text or "") / 4))
+
+
+def estimate_cost_usd(model: str, input_tokens: int, output_tokens: int) -> float:
+    pricing = MODEL_PRICING_USD_PER_1M.get(model, MODEL_PRICING_USD_PER_1M.get("gpt-4.1-mini"))
+    return round(
+        (input_tokens / 1_000_000) * pricing["input"]
+        + (output_tokens / 1_000_000) * pricing["output"],
+        8,
+    )
+
+
+def log_usage_event(
+    visitor_id: str = "",
+    session_id: str = "",
+    interaction_id: str = "",
+    feature: str = "chat",
+    model: str = "gpt-4.1-mini",
+    input_text: str = "",
+    output_text: str = "",
+    used_owner_key: bool = False,
+) -> dict[str, Any]:
+    visitor = get_visitor(visitor_id) if visitor_id else None
+    input_tokens = estimate_tokens(input_text)
+    output_tokens = estimate_tokens(output_text)
+    total_tokens = input_tokens + output_tokens
+    cost = estimate_cost_usd(model, input_tokens, output_tokens)
+    now = utc_now()
+
+    record = {
+        "usage_id": str(uuid.uuid4()),
+        "visitor_id": visitor_id or None,
+        "visitor_name": visitor.get("name", "") if visitor else "",
+        "visitor_email": visitor.get("email", "") if visitor else "",
+        "session_id": session_id or None,
+        "interaction_id": interaction_id or None,
+        "feature": feature,
+        "model": model,
+        "input_tokens_estimate": input_tokens,
+        "output_tokens_estimate": output_tokens,
+        "total_tokens_estimate": total_tokens,
+        "estimated_cost_usd": cost,
+        "used_owner_key": bool(used_owner_key),
+        "created_at": now,
+    }
+
+    try:
+        if use_supabase():
+            _sb_insert(usage_table(), record)
+        else:
+            init_sqlite_db()
+            with get_connection() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO usage_events
+                    (usage_id, visitor_id, visitor_name, visitor_email, session_id, interaction_id, feature, model,
+                     input_tokens_estimate, output_tokens_estimate, total_tokens_estimate, estimated_cost_usd,
+                     used_owner_key, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        record["usage_id"],
+                        record["visitor_id"],
+                        record["visitor_name"],
+                        record["visitor_email"],
+                        record["session_id"],
+                        record["interaction_id"],
+                        record["feature"],
+                        record["model"],
+                        record["input_tokens_estimate"],
+                        record["output_tokens_estimate"],
+                        record["total_tokens_estimate"],
+                        record["estimated_cost_usd"],
+                        int(record["used_owner_key"]),
+                        record["created_at"],
+                    ),
+                )
+                conn.commit()
+    except Exception:
+        # Usage tracking should never break the actual user experience.
+        return record
+
+    return record
+
+
+def summarize_usage_events(events: list[dict[str, Any]]) -> dict[str, Any]:
+    total_input = sum(int(e.get("input_tokens_estimate") or 0) for e in events)
+    total_output = sum(int(e.get("output_tokens_estimate") or 0) for e in events)
+    total_tokens = sum(int(e.get("total_tokens_estimate") or 0) for e in events)
+    total_cost = sum(float(e.get("estimated_cost_usd") or 0) for e in events)
+    owner_key_requests = sum(1 for e in events if bool(e.get("used_owner_key")))
+    user_key_requests = len(events) - owner_key_requests
+
+    by_feature: dict[str, dict[str, Any]] = {}
+    by_model: dict[str, dict[str, Any]] = {}
+    by_visitor: dict[str, dict[str, Any]] = {}
+
+    def bump(bucket: dict[str, dict[str, Any]], key: str, event: dict[str, Any]) -> None:
+        key = key or "Unknown"
+        if key not in bucket:
+            bucket[key] = {"requests": 0, "tokens": 0, "estimated_cost_usd": 0.0}
+        bucket[key]["requests"] += 1
+        bucket[key]["tokens"] += int(event.get("total_tokens_estimate") or 0)
+        bucket[key]["estimated_cost_usd"] += float(event.get("estimated_cost_usd") or 0)
+
+    for event in events:
+        bump(by_feature, event.get("feature", ""), event)
+        bump(by_model, event.get("model", ""), event)
+        visitor_key = event.get("visitor_email") or event.get("visitor_name") or "Unknown"
+        bump(by_visitor, visitor_key, event)
+
+    for bucket in (by_feature, by_model, by_visitor):
+        for value in bucket.values():
+            value["estimated_cost_usd"] = round(value["estimated_cost_usd"], 8)
+
+    return {
+        "requests": len(events),
+        "input_tokens_estimate": total_input,
+        "output_tokens_estimate": total_output,
+        "total_tokens_estimate": total_tokens,
+        "estimated_cost_usd": round(total_cost, 8),
+        "owner_key_requests": owner_key_requests,
+        "user_key_requests": user_key_requests,
+        "by_feature": by_feature,
+        "by_model": by_model,
+        "by_visitor": by_visitor,
+    }
+
+
 def export_summary(limit: int = 100) -> dict[str, Any]:
     limit = max(1, min(int(limit), 500))
     if use_supabase():
@@ -573,6 +739,7 @@ def export_summary(limit: int = 100) -> dict[str, Any]:
         interactions = _sb_get(interactions_table(), {"select": "*", "order": "created_at.desc", "limit": str(limit)})
         sessions = _sb_get(sessions_table(), {"select": "*", "order": "last_activity_at.desc", "limit": str(limit)})
         messages = _sb_get(messages_table(), {"select": "*", "order": "created_at.desc", "limit": str(limit)})
+        usage_events = _sb_get(usage_table(), {"select": "*", "order": "created_at.desc", "limit": str(limit)})
     else:
         init_sqlite_db()
         with get_connection() as conn:
@@ -580,6 +747,7 @@ def export_summary(limit: int = 100) -> dict[str, Any]:
             interactions = [dict(row) for row in conn.execute("SELECT * FROM interactions ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()]
             sessions = [dict(row) for row in conn.execute("SELECT * FROM conversation_sessions ORDER BY last_activity_at DESC LIMIT ?", (limit,)).fetchall()]
             messages = [dict(row) for row in conn.execute("SELECT * FROM conversation_messages ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()]
+            usage_events = [dict(row) for row in conn.execute("SELECT * FROM usage_events ORDER BY created_at DESC LIMIT ?", (limit,)).fetchall()]
 
     counter: Counter[str] = Counter()
     display: dict[str, str] = {}
@@ -599,7 +767,10 @@ def export_summary(limit: int = 100) -> dict[str, Any]:
             "interactions": len(interactions),
             "sessions": len(sessions),
             "messages": len(messages),
+            "usage_events": len(usage_events),
         },
+        "usage_summary": summarize_usage_events(usage_events),
+        "usage_events": usage_events,
         "visitors": visitors,
         "interactions": interactions,
         "sessions": sessions,
