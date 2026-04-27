@@ -292,11 +292,17 @@ ensure_index()
 BOT = get_portfolio_bot(CHAT_MODEL, EMBEDDING_MODEL)
 
 
+def has_session_key(session_api_key: str | None) -> bool:
+    return bool((session_api_key or "").strip())
+
+
 def get_runtime_bot(session_api_key: str | None):
     session_api_key = (session_api_key or "").strip()
-    if session_api_key:
-        return create_portfolio_bot(CHAT_MODEL, EMBEDDING_MODEL, api_key=session_api_key)
-    return BOT
+    if not session_api_key:
+        raise ValueError(
+            "Please enter your own OpenAI API key first. This public demo does not use Shailesh's private API credits."
+        )
+    return create_portfolio_bot(CHAT_MODEL, EMBEDDING_MODEL, api_key=session_api_key)
 
 
 def register_visitor(name, email, phone, linkedin, github, website, other_contact):
@@ -313,7 +319,11 @@ def register_visitor(name, email, phone, linkedin, github, website, other_contac
                 "source": "Hugging Face / Gradio demo",
             }
         )
-        msg = f"✅ Thanks, **{visitor['name']}**. You can now use ShaileshGPT. Your questions may be logged to help improve the product."
+        msg = (
+            f"✅ Thanks, **{visitor['name']}**. Step 1 is done. "
+            "Now add your own OpenAI API key in the required API Key section before using ShaileshGPT. "
+            "Your questions may be logged to help improve the product."
+        )
         return visitor, msg
     except Exception as exc:
         return {}, f"⚠️ {exc}"
@@ -322,10 +332,10 @@ def register_visitor(name, email, phone, linkedin, github, website, other_contac
 def save_session_key(api_key: str):
     api_key = (api_key or "").strip()
     if not api_key:
-        return "", "No key saved. The app will use the server-side key if configured."
+        return "", "Please enter your own OpenAI API key before using ShaileshGPT."
     if not api_key.startswith("sk-"):
         return "", "That does not look like a standard OpenAI API key. I did not save it."
-    return api_key, "Session key saved for this browser session only. It is not written to disk."
+    return api_key, "API key saved for this browser session only. You can now use ShaileshGPT."
 
 
 def submit_lead(name, email, phone, linkedin, github, website, other_contact, message):
@@ -348,6 +358,10 @@ def submit_lead(name, email, phone, linkedin, github, website, other_contact, me
 def stream_jd_analysis(file_obj, jd_question: str, session_api_key: str | None, visitor_state: dict | None):
     if not visitor_state or not visitor_state.get("visitor_id"):
         yield "Please enter your name and email in the **Visitor Access** section before using Recruiter Mode."
+        return
+
+    if not has_session_key(session_api_key):
+        yield "Please add your own OpenAI API key in the **Required API Key** section before using Recruiter Mode."
         return
 
     if file_obj is None:
@@ -408,7 +422,7 @@ def hero_html() -> str:
 WELCOME = (
     "Hey, I’m **ShaileshGPT** — the portfolio twin that answers questions about Shailesh without making you scroll "
     "through five tabs like it’s a treasure hunt.\n\n"
-    "Ask me about his experience, projects, skills, education, certifications, AI/LLM work, hobbies, or whether he’s "
+    "After entering your visitor details and your own OpenAI API key, ask me about his experience, projects, skills, education, certifications, AI/LLM work, hobbies, or whether he’s "
     "more cricket-crazy than is medically advisable."
 )
 
@@ -421,7 +435,7 @@ def add_user_message(message: str, history: list[dict[str, str]] | None, visitor
     if not visitor_state or not visitor_state.get("visitor_id"):
         history.append({
             "role": "assistant",
-            "content": "Please enter your **name and email** in the Visitor Access section before using ShaileshGPT. I promise, no secret handshake required."
+            "content": "Please enter your **name and email** in the Visitor Access section before using ShaileshGPT."
         })
         return message, history
     history.append({"role": "user", "content": message})
@@ -435,6 +449,14 @@ def stream_bot_message(history: list[dict[str, str]] | None, session_api_key: st
         return
 
     if not visitor_state or not visitor_state.get("visitor_id"):
+        yield history
+        return
+
+    if not has_session_key(session_api_key):
+        history[-1]["content"] = (
+            "Please add your own OpenAI API key in the **Required API Key** section before using this public demo. "
+            "This keeps the project available without draining Shailesh's private API credits."
+        )
         yield history
         return
 
@@ -482,9 +504,21 @@ with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS, title=f"{NAME} | Shailesh
                 visitor_github = gr.Textbox(label="GitHub", placeholder="Optional")
                 visitor_website = gr.Textbox(label="Website", placeholder="Optional")
             visitor_other = gr.Textbox(label="Other contact", placeholder="Optional")
-            visitor_submit = gr.Button("Start using ShaileshGPT", elem_id="lead-submit")
+            visitor_submit = gr.Button("Save visitor details", elem_id="lead-submit")
             visitor_status = gr.Markdown()
             visitor_state = gr.State({})
+
+        with gr.Accordion("Required: use your own OpenAI API key for this demo", open=True, elem_id="key-card"):
+            gr.HTML("""<div class='small-muted'>
+            <strong>API key required.</strong> This public demo does not use Shailesh's private OpenAI credits.
+            Please add your own OpenAI API key to run chat and JD analysis. The key is kept only in this active Gradio session,
+            is not written to disk, and is not stored in the project database. This is mandatory so the demo can remain public
+            without unexpected API costs.
+            </div>""")
+            api_key_input = gr.Textbox(label="OpenAI API key *", type="password", placeholder="sk-...")
+            key_save = gr.Button("Save API key for this session", elem_id="key-save")
+            key_status = gr.Markdown()
+            session_api_key = gr.State("")
 
         with gr.Column(elem_id="chat-card"):
 
@@ -542,14 +576,6 @@ with gr.Blocks(theme=gr.themes.Soft(), css=CUSTOM_CSS, title=f"{NAME} | Shailesh
             lead_message = gr.Textbox(label="Message / Intent", lines=3, placeholder="Tell Shailesh why you want to connect.")
             lead_submit = gr.Button("Send my details to Shailesh", elem_id="lead-submit")
             lead_status = gr.Markdown()
-
-        with gr.Accordion("Optional: use your own OpenAI API key for this session", open=False, elem_id="key-card"):
-            gr.HTML("<div class='small-muted'>Prefer to run the conversation on your own OpenAI credits? Add your key here for this active session. It stays session-only and is not written to disk.</div>")
-            api_key_input = gr.Textbox(label="OpenAI API key", type="password", placeholder="sk-...")
-            key_save = gr.Button("Use this key for my session", elem_id="key-save")
-            key_status = gr.Markdown()
-
-        session_api_key = gr.State("")
 
         gr.HTML("<div id='footer-note'>Designed and Built by Shailesh Gupta.</div>")
 

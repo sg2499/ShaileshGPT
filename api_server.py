@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
-from agentic_rag import get_portfolio_bot
+from agentic_rag import create_portfolio_bot, get_portfolio_bot
 from build_kb import main as build_kb_main
 from lead_utils import capture_lead
 from jd_matcher import evaluate_jd_fit, extract_text_from_upload
@@ -32,6 +32,27 @@ if not INDEX_PATH.exists():
     build_kb_main()
 
 BOT = get_portfolio_bot(CHAT_MODEL, EMBEDDING_MODEL)
+
+
+def require_user_api_key(request: Request) -> str:
+    if os.getenv("REQUIRE_USER_OPENAI_API_KEY", "false").strip().lower() not in {"1", "true", "yes", "y", "on"}:
+        return ""
+    key = request.headers.get("x-openai-api-key", "").strip()
+    if not key:
+        raise HTTPException(
+            status_code=403,
+            detail="Please provide your own OpenAI API key to use this public demo."
+        )
+    if not key.startswith("sk-"):
+        raise HTTPException(status_code=400, detail="Invalid OpenAI API key format.")
+    return key
+
+
+def bot_for_request(request: Request):
+    session_key = require_user_api_key(request)
+    if session_key:
+        return create_portfolio_bot(CHAT_MODEL, EMBEDDING_MODEL, api_key=session_key)
+    return BOT
 
 RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "30"))
 RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "3600"))
@@ -162,7 +183,7 @@ def chat(payload: ChatRequest, request: Request) -> dict[str, str]:
     except Exception as exc:
         raise HTTPException(status_code=403, detail=str(exc))
     history = [item.model_dump() for item in payload.history]
-    result = BOT.answer(payload.message, chat_history=history)
+    result = bot_for_request(request).answer(payload.message, chat_history=history)
     log_interaction(
         payload.visitor_id,
         payload.message,
@@ -192,7 +213,7 @@ def chat_stream(payload: ChatRequest, request: Request) -> StreamingResponse:
                 channel="website_or_api_stream",
                 interaction_type="chat_question",
             )
-            for token in BOT.answer_stream(payload.message, chat_history=history):
+            for token in bot_for_request(request).answer_stream(payload.message, chat_history=history):
                 collected.append(token)
                 yield f"data: {json.dumps({'token': token})}\n\n"
             if interaction:
@@ -241,7 +262,7 @@ async def jd_fit(
 
     try:
         jd_text = extract_text_from_upload(str(tmp_path))
-        answer = evaluate_jd_fit(BOT, jd_text, question)
+        answer = evaluate_jd_fit(bot_for_request(request), jd_text, question)
         log_interaction(
             visitor_id,
             f"JD upload: {file.filename or 'uploaded_jd'} | Question: {question}",
