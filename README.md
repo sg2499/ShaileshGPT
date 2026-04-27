@@ -2202,6 +2202,14 @@ This screenshot shows the Recruiter Mode feature where a user can upload a job d
 
 ---
 
+### 3. ShaileshGPT Admin Dashboard
+
+This screenshot gives a secure view of visitor activity, submitted leads, conversation history, most asked questions, and usage-cost estimates. It helps track how users interact with the AI portfolio product while keeping analytics protected behind an admin token.
+
+![ShaileshGPT Admin Dashboard](screenshots/shaileshgpt-admin-dashboard.png)
+
+---
+
 ## 📚 Learning Value
 
 By studying or rebuilding this project, you can learn:
