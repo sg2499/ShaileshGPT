@@ -366,8 +366,73 @@ def create_session(visitor: dict[str, Any], source: str = "ShaileshGPT") -> str:
     return session_id
 
 
+def session_exists(session_id: str) -> bool:
+    session_id = _clean(session_id)
+    if not session_id:
+        return False
+
+    if use_supabase():
+        rows = _sb_get(sessions_table(), {"session_id": f"eq.{session_id}", "select": "session_id", "limit": "1"})
+        return bool(rows)
+
+    init_sqlite_db()
+    with get_connection() as conn:
+        row = conn.execute(
+            "SELECT session_id FROM conversation_sessions WHERE session_id=?",
+            (session_id,),
+        ).fetchone()
+    return bool(row)
+
+
+def create_session_with_id(visitor: dict[str, Any], session_id: str, source: str = "ShaileshGPT") -> str:
+    session_id = _clean(session_id) or str(uuid.uuid4())
+    now = utc_now()
+    record = {
+        "session_id": session_id,
+        "visitor_id": visitor["visitor_id"],
+        "visitor_name": visitor.get("name", ""),
+        "visitor_email": visitor.get("email", ""),
+        "source": source,
+        "created_at": now,
+        "last_activity_at": now,
+    }
+
+    if use_supabase():
+        _sb_insert(sessions_table(), record)
+    else:
+        init_sqlite_db()
+        with get_connection() as conn:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO conversation_sessions
+                (session_id, visitor_id, visitor_name, visitor_email, source, created_at, last_activity_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    record["session_id"],
+                    record["visitor_id"],
+                    record["visitor_name"],
+                    record["visitor_email"],
+                    record["source"],
+                    record["created_at"],
+                    record["last_activity_at"],
+                ),
+            )
+            conn.commit()
+
+    return session_id
+
+
 def get_or_create_session(visitor: dict[str, Any], session_id: str = "", source: str = "ShaileshGPT") -> str:
-    return _clean(session_id) or create_session(visitor, source=source)
+    session_id = _clean(session_id)
+
+    if not session_id:
+        return create_session(visitor, source=source)
+
+    if session_exists(session_id):
+        return session_id
+
+    return create_session_with_id(visitor, session_id=session_id, source=source)
 
 
 def insert_message(visitor_id: str, session_id: str, role: str, content: str, interaction_id: str = "") -> None:
