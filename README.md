@@ -213,7 +213,13 @@ It includes:
 - SendGrid Email Notification
 - Pushover Phone Notification
 - Mandatory Session-Level User OpenAI API Key
-- Supabase Visitor and Question Analytics
+- Supabase Visitor, Session, Conversation, and Question Analytics
+- Admin Dashboard for Visitors, Leads, Sessions, Questions, and Usage
+- Admin Token Authentication
+- Full Conversation History Logging
+- Most Asked Questions Analytics
+- Usage-Based Estimated Cost Monitoring
+- Downloadable Recruiter JD-Fit PDF Reports
 - Render Backend Deployment
 - Vercel Frontend Deployment
 - API Rate Limiting
@@ -408,7 +414,7 @@ This helps understand who is exploring the product and creates a useful activity
 
 ---
 
-### 11. Supabase Visitor and Question Analytics
+### 11. Supabase Visitor, Session, Conversation, and Question Analytics
 
 The project now includes Supabase-backed analytics.
 
@@ -419,20 +425,185 @@ It records:
 - Optional contact details
 - Session source
 - Questions asked
+- Full conversation messages
 - JD-Fit analysis requests
+- JD-Fit PDF report downloads
 - Lead/contact submissions
 - Answer previews
 - Timestamps
 - Interaction channel
+- Most asked questions
+- Estimated usage and cost events
 
-The analytics database contains two main tables:
+The analytics database now contains these main tables:
 
 ```text
 visitors
 interactions
+conversation_sessions
+conversation_messages
+usage_events
 ```
 
-This makes the project more production-like because public usage is not only interactive but also measurable.
+This makes the project more production-like because public usage is not only interactive but also measurable, auditable, and easier to improve over time.
+
+---
+
+### 12. Admin Dashboard
+
+ShaileshGPT now includes a backend-hosted admin dashboard for monitoring real product activity.
+
+The admin dashboard shows:
+
+- Total visitors
+- Total interactions
+- Total sessions
+- Total conversation messages
+- Recent visitors
+- Recent questions and interactions
+- Most asked questions
+- Conversation message history
+- Usage and estimated cost analytics
+- CSV export of interaction logs
+
+The dashboard is available from the backend route:
+
+```text
+/admin
+```
+
+Example:
+
+```text
+https://your-render-service.onrender.com/admin
+```
+
+---
+
+### 13. Admin Authentication
+
+The admin dashboard is protected by a private admin token.
+
+The backend checks:
+
+```env
+ANALYTICS_ADMIN_TOKEN=your_private_admin_token
+```
+
+Only users who know this token can open analytics data inside the admin dashboard or access protected analytics endpoints.
+
+This protects:
+
+- Visitor details
+- Questions asked
+- Conversation history
+- JD-Fit activity
+- Usage/cost estimates
+- CSV export
+
+---
+
+### 14. Full Conversation History
+
+Earlier versions stored only individual interactions. The upgraded version stores complete conversation flow.
+
+It now tracks:
+
+- Visitor
+- Session
+- Message role
+- User messages
+- Assistant messages
+- Timestamp
+- Interaction ID
+
+This makes it possible to understand not just what question was asked, but how the entire conversation evolved.
+
+---
+
+### 15. Most Asked Questions Analytics
+
+The admin dashboard includes a **Most Asked Questions** section.
+
+This helps identify:
+
+- What recruiters care about most
+- Which skills/projects visitors ask about repeatedly
+- What gaps visitors are checking
+- Which website sections may need improvement
+- Which questions should become public FAQ content
+
+This is useful for improving the portfolio, README, resume, and interview positioning.
+
+---
+
+### 16. Usage-Based Estimated Cost Monitoring
+
+ShaileshGPT now includes internal usage/cost monitoring.
+
+It logs estimated usage for:
+
+- Chat
+- Streaming chat
+- JD-Fit analysis
+- JD-Fit PDF report generation
+
+The dashboard tracks:
+
+- Estimated input tokens
+- Estimated output tokens
+- Estimated total tokens
+- Estimated cost in USD
+- Cost by feature
+- Cost by model
+- Cost by visitor
+- Whether the owner key was used
+
+Important safety field:
+
+```text
+used_owner_key
+```
+
+For normal public usage, this should be:
+
+```text
+false
+```
+
+If it appears as:
+
+```text
+true
+```
+
+that means a request used the backend/owner key, which should be investigated immediately.
+
+> Note: This is an internal estimate based on text length and model pricing assumptions. Official billing must always be checked in the OpenAI dashboard.
+
+---
+
+### 17. Downloadable JD-Fit PDF Reports
+
+Recruiter Mode now supports downloadable PDF reports.
+
+After uploading a JD and running the analysis, the user can download a structured PDF report containing:
+
+- Candidate-role fit verdict
+- Match percentage range
+- Strongest matches
+- Gaps / ramp-up areas
+- Best proof points
+- Recruiter takeaway
+- Final recommendation
+
+Backend endpoint:
+
+```http
+POST /jd_fit_report
+```
+
+This turns the recruiter mode into a more polished hiring-evaluation workflow.
 
 ---
 
@@ -451,7 +622,9 @@ Floating ShaileshGPT Widget / Gradio App
    ↓
 FastAPI Backend
    ↓
-Supabase Visitor + Interaction Analytics
+Admin-Protected Analytics Layer
+   ↓
+Supabase Visitors + Sessions + Interactions + Messages + Usage Events
    ↓
 Agentic RAG Pipeline
    ↓
@@ -459,7 +632,7 @@ OpenAI Chat + Embeddings using User-Provided API Key
    ↓
 Personal Knowledge Base
    ↓
-Grounded Answer / JD Fit / Lead Capture
+Grounded Answer / JD Fit / JD PDF Report / Lead Capture
    ↓
 SendGrid Email + Pushover Notification
 ```
@@ -514,6 +687,12 @@ Main backend responsibilities:
 - Register visitors
 - Log questions and JD-Fit activity
 - Store analytics in Supabase
+- Track sessions and full conversation history
+- Analyze most asked questions
+- Estimate token usage and approximate cost
+- Generate downloadable JD-Fit PDF reports
+- Serve the admin dashboard
+- Protect admin analytics using token authentication
 - Enforce user-provided API key flow for public usage
 - Send notifications
 - Rate-limit public API usage
@@ -552,8 +731,9 @@ A typical full project structure looks like this:
 │   ├── prepare_sources.py         # Prepares source documents
 │   ├── jd_matcher.py              # JD-fit analysis logic
 │   ├── lead_utils.py              # Pushover + SendGrid lead notification
-│   ├── analytics_db.py            # Visitor/session/question analytics storage
-│   ├── supabase_schema.sql        # Supabase database schema
+│   ├── analytics_db.py            # Visitors, sessions, messages, usage/cost analytics
+│   ├── supabase_schema.sql        # Supabase schema for analytics tables
+│   ├── admin_dashboard.html       # Protected admin dashboard UI
 │   ├── widget.js                  # Optional standalone website widget
 │   ├── requirements.txt           # Python backend dependencies
 │   ├── runtime.txt                # Python version for Render
@@ -685,6 +865,7 @@ requests
 numpy
 pypdf
 python-multipart
+reportlab
 ```
 
 Install with:
@@ -716,6 +897,9 @@ SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 SUPABASE_VISITORS_TABLE=visitors
 SUPABASE_INTERACTIONS_TABLE=interactions
+SUPABASE_SESSIONS_TABLE=conversation_sessions
+SUPABASE_MESSAGES_TABLE=conversation_messages
+SUPABASE_USAGE_TABLE=usage_events
 
 # Admin analytics access
 ANALYTICS_ADMIN_TOKEN=choose_a_private_admin_token
@@ -1015,6 +1199,9 @@ This creates:
 ```text
 visitors
 interactions
+conversation_sessions
+conversation_messages
+usage_events
 ```
 
 ### Step 4 — Add Analytics Environment Variables
@@ -1025,6 +1212,9 @@ SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 SUPABASE_VISITORS_TABLE=visitors
 SUPABASE_INTERACTIONS_TABLE=interactions
+SUPABASE_SESSIONS_TABLE=conversation_sessions
+SUPABASE_MESSAGES_TABLE=conversation_messages
+SUPABASE_USAGE_TABLE=usage_events
 ANALYTICS_ADMIN_TOKEN=choose_a_private_admin_token
 ```
 
@@ -1051,6 +1241,95 @@ x-admin-token: YOUR_ANALYTICS_ADMIN_TOKEN
 ```
 
 ---
+
+## 📊 Admin Dashboard and Analytics Monitoring
+
+The backend includes a protected admin dashboard.
+
+Open:
+
+```text
+https://your-render-service.onrender.com/admin
+```
+
+Enter your private admin token:
+
+```env
+ANALYTICS_ADMIN_TOKEN=your_private_admin_token
+```
+
+The dashboard displays:
+
+- Visitor activity
+- Submitted lead details
+- Interaction history
+- Full conversation messages
+- Most asked questions
+- Usage and estimated cost
+- CSV export
+
+### Protected Analytics Endpoints
+
+```http
+GET /analytics/summary
+```
+
+Returns dashboard analytics data.
+
+```http
+GET /analytics/interactions.csv
+```
+
+Exports recent interaction history as CSV.
+
+Both require:
+
+```text
+x-admin-token: YOUR_ANALYTICS_ADMIN_TOKEN
+```
+
+or a query parameter:
+
+```text
+?token=YOUR_ANALYTICS_ADMIN_TOKEN
+```
+
+### Usage and Cost Monitoring
+
+The `usage_events` table stores estimated cost metadata.
+
+It tracks:
+
+- Feature used
+- Model used
+- Estimated input tokens
+- Estimated output tokens
+- Estimated total tokens
+- Estimated cost in USD
+- Whether the owner key was used
+
+Important field:
+
+```text
+used_owner_key
+```
+
+For public usage, this should normally be:
+
+```text
+false
+```
+
+If it is ever:
+
+```text
+true
+```
+
+then the backend/owner key was used for that request and should be investigated.
+
+> Cost values are estimates for product analytics. Official usage must be checked from the OpenAI Platform dashboard.
+
 
 ## 🧠 Customize the Knowledge Base for Yourself
 
@@ -1290,6 +1569,61 @@ x-admin-token: YOUR_ANALYTICS_ADMIN_TOKEN
 
 ---
 
+### Admin Dashboard
+
+```http
+GET /admin
+```
+
+Serves the protected admin dashboard UI.
+
+The dashboard requires:
+
+```text
+ANALYTICS_ADMIN_TOKEN
+```
+
+---
+
+### JD-Fit PDF Report
+
+```http
+POST /jd_fit_report
+```
+
+Accepts:
+
+- Job description file
+- Optional recruiter question
+- Visitor ID
+- Session ID
+
+Returns:
+
+```text
+application/pdf
+```
+
+The generated report summarizes the candidate-role fit in a recruiter-friendly PDF format.
+
+---
+
+### Usage and Cost Monitoring
+
+Usage is logged internally to:
+
+```text
+usage_events
+```
+
+This is not a public API endpoint, but it appears inside:
+
+```text
+/admin → Usage & Cost
+```
+
+---
+
 
 
 ## 🌐 Frontend Setup Guide
@@ -1349,6 +1683,9 @@ knowledge_base.py
 prepare_sources.py
 jd_matcher.py
 lead_utils.py
+analytics_db.py
+admin_dashboard.html
+supabase_schema.sql
 requirements.txt
 runtime.txt
 data/profile_seed.json
@@ -1398,6 +1735,9 @@ SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 SUPABASE_VISITORS_TABLE=visitors
 SUPABASE_INTERACTIONS_TABLE=interactions
+SUPABASE_SESSIONS_TABLE=conversation_sessions
+SUPABASE_MESSAGES_TABLE=conversation_messages
+SUPABASE_USAGE_TABLE=usage_events
 ANALYTICS_ADMIN_TOKEN=choose_a_private_admin_token
 ```
 
@@ -1503,6 +1843,13 @@ After deployment, test the following:
 - [ ] JD upload works after user key is saved
 - [ ] Supabase `visitors` table records visitor details
 - [ ] Supabase `interactions` table records questions/JD activity
+- [ ] Supabase `conversation_sessions` table records sessions
+- [ ] Supabase `conversation_messages` table records full chat history
+- [ ] Supabase `usage_events` table records estimated usage/cost
+- [ ] `/admin` dashboard opens after admin token entry
+- [ ] Most Asked Questions tab updates after repeated questions
+- [ ] Usage & Cost tab shows estimated requests/tokens/cost
+- [ ] JD-Fit PDF report downloads correctly
 - [ ] lead capture works
 - [ ] SendGrid email arrives
 - [ ] Pushover phone notification arrives
@@ -1695,7 +2042,95 @@ Fix:
 
 ---
 
-### 12. Social Preview Image Does Not Update
+### 12. Admin Dashboard Does Not Open
+
+Possible causes:
+
+- New `api_server.py` is not deployed
+- `admin_dashboard.html` is missing from backend deployment
+- Render is still running an older commit
+- You are opening the Vercel frontend instead of the Render backend
+
+Fix:
+
+- Open `https://your-render-service.onrender.com/admin`
+- Confirm `admin_dashboard.html` exists in the backend repo
+- Redeploy Render
+- Check Render logs
+
+---
+
+### 13. Admin Token Fails
+
+Possible causes:
+
+- `ANALYTICS_ADMIN_TOKEN` is missing
+- Wrong token entered
+- Render was not redeployed after adding the token
+
+Fix:
+
+- Add `ANALYTICS_ADMIN_TOKEN` in Render environment variables
+- Redeploy Render
+- Enter the same value in the admin dashboard login field
+
+---
+
+### 14. Supabase `session_id` Foreign Key Error
+
+Possible cause:
+
+- The backend is inserting an interaction before creating the matching conversation session
+- You are using an older `analytics_db.py`
+
+Fix:
+
+- Replace `analytics_db.py` with the latest version
+- Redeploy Render
+- Confirm `conversation_sessions` exists in Supabase
+- Hard refresh the website
+
+---
+
+### 15. Usage & Cost Tab Shows No Data
+
+Possible causes:
+
+- `usage_events` table was not created
+- `SUPABASE_USAGE_TABLE=usage_events` is missing
+- Latest `analytics_db.py` / `api_server.py` was not deployed
+- No chat/JD requests have happened after the update
+
+Fix:
+
+- Run the latest `supabase_schema.sql`
+- Add `SUPABASE_USAGE_TABLE=usage_events`
+- Redeploy Render
+- Ask a chat question or run JD Fit
+- Open `/admin → Usage & Cost`
+
+---
+
+### 16. JD PDF Report Does Not Download
+
+Possible causes:
+
+- `reportlab` is missing from `requirements.txt`
+- `/jd_fit_report` endpoint is not deployed
+- User OpenAI API key was not entered
+- JD file upload failed
+
+Fix:
+
+- Add `reportlab` to `requirements.txt`
+- Redeploy Render
+- Enter your own OpenAI API key in the UI
+- Upload a supported JD file
+- Click `Download PDF Report`
+
+---
+
+### 17. Social Preview Image Does Not Update
 
 Possible causes:
 
@@ -1724,6 +2159,7 @@ Fix:
 - Enable rate limiting
 - Keep lead-capture endpoints protected from abuse
 - Monitor usage and billing
+- Monitor the dashboard `used_owner_key` flag
 - Keep user-provided API keys session-only
 - Rotate keys if exposed accidentally
 
@@ -1739,7 +2175,8 @@ To control costs:
 - Keep model choices reasonable
 - Avoid exposing unrestricted backend usage
 - Monitor OpenAI usage dashboard
-- Encourage users to use their own OpenAI API key when testing
+- Monitor `/admin → Usage & Cost`
+- Require users to use their own OpenAI API key when testing
 - Keep JD analysis concise
 - Add authentication if scaling publicly
 
@@ -1783,20 +2220,17 @@ By studying or rebuilding this project, you can learn:
 
 ## 🚧 Future Improvements
 
-Possible upgrades:
+Possible future upgrades:
 
-- Add login/authentication for admin mode
-- Add a dashboard to view submitted leads
-- Save conversation history to a database
-- Add richer analytics dashboards for most asked questions
+- Add Supabase Auth or OAuth-based admin login
 - Add admin UI to update knowledge base
-- Add automatic GitHub/blog ingestion
-- Add downloadable JD-fit reports
-- Add PDF export for recruiter analysis
+- Add automatic GitHub/blog ingestion with approval flow
 - Add voice input
 - Add multilingual support
-- Add usage-based cost tracking
-- Add custom fine-tuned response style
+- Add custom response-style controls
+- Add richer charts for dashboard analytics
+- Add recruiter report templates in DOCX and Markdown
+- Add scheduled email digests of visitor activity
 
 ---
 
