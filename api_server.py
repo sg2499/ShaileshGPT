@@ -11,14 +11,14 @@ from typing import Generator
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 
 from agentic_rag import get_portfolio_bot
 from build_kb import main as build_kb_main
 from lead_utils import capture_lead
 from jd_matcher import evaluate_jd_fit, extract_text_from_upload
-from analytics_db import create_or_update_visitor, export_summary, log_interaction, require_visitor, update_interaction_answer
+from analytics_db import create_or_update_visitor, export_interactions_csv, export_summary, log_interaction, require_visitor, update_interaction_answer
 
 
 ROOT = Path(__file__).resolve().parent
@@ -125,7 +125,7 @@ def visitor_start(payload: VisitorStartRequest, request: Request) -> dict[str, o
             "visitor_id": visitor["visitor_id"],
             "name": visitor["name"],
             "email": visitor["email"],
-            "message": "Thanks — you can now use ShaileshGPT.",
+            "message": "Thanks - you can now use ShaileshGPT.",
         }
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -138,6 +138,20 @@ def analytics_summary(request: Request) -> dict[str, object]:
     if not token or supplied != token:
         raise HTTPException(status_code=403, detail="Unauthorized")
     return export_summary(limit=200)
+
+
+@app.get("/analytics/interactions.csv")
+def analytics_interactions_csv(request: Request) -> Response:
+    token = os.getenv("ANALYTICS_ADMIN_TOKEN", "").strip()
+    supplied = request.headers.get("x-admin-token", "").strip()
+    if not token or supplied != token:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    csv_text = export_interactions_csv(limit=1000)
+    return Response(
+        content=csv_text,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=shaileshgpt_interactions.csv"},
+    )
 
 
 @app.post("/chat")
