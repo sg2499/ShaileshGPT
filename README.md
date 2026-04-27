@@ -26,10 +26,10 @@ You can try the deployed ShaileshGPT demo on Hugging Face Spaces here:
 
 This demo lets you interact with the chatbot, ask questions about the portfolio, test recruiter-style queries, and explore how the personal AI assistant works.
 
-> ⚠️ **Important API Usage Note**  
-> This project uses paid LLM/API services. If you are testing the bot seriously or running multiple queries, please use your **own OpenAI API key** through the optional API key field available in the app.  
+> ⚠️ **Mandatory API Usage Note**  
+> This project uses paid LLM/API services. To keep the public demo available without creating uncontrolled API costs, users must enter their **own OpenAI API key** before using Chat or Recruiter JD-Fit analysis.  
 >  
-> Using your own key is always recommended because it helps control public demo costs and allows you to test the project independently using your own credits.
+> Your key is used only for your active browser/session request flow. It is not stored in Supabase, not written to disk, not saved in the project database, and not exposed in the repository. Without your own key, the public demo and website bot will not allow AI responses.
 
 ---
 
@@ -105,19 +105,51 @@ This project uses paid third-party APIs:
 - OpenAI API for chat, embeddings, routing, retrieval, and answer generation
 - SendGrid API for email notifications
 - Pushover API for instant lead notifications
+- Supabase for visitor/session analytics and interaction tracking
 
-Because of this, unrestricted public usage can increase API cost.
+Because OpenAI usage is billed, unrestricted public usage can create unexpected API costs.
 
-My personal website has ShaileshGPT integrated, and users can interact with the bot there. However, the app also includes an option where users can enter their **own OpenAI API key for the active session**.
+For this reason, the current public version of ShaileshGPT requires users to enter their **own OpenAI API key** before using the AI-powered features.
 
-This is useful because:
+This applies to:
 
-- It helps control my API costs
-- Advanced users can test using their own credits
-- Developers cloning the project can run it independently
-- No one needs to depend on my private credentials
+- Hugging Face demo
+- Personal website chatbot
+- Chat responses
+- Suggestion questions
+- Recruiter JD-Fit analysis
 
-If you are cloning this project, please use **your own API keys**.
+Users can still explore the website and project normally, but to generate AI answers they must provide their own key.
+
+### Why I made user API keys mandatory
+
+This decision was made for practical and responsible reasons:
+
+- It prevents uncontrolled usage of my private OpenAI credits
+- It keeps the public demo available for everyone
+- It allows serious users to test the product using their own credits
+- It makes the project safer and more scalable as a public portfolio demo
+- It avoids the risk of random users draining the owner’s API quota
+
+### Is it safe to enter your OpenAI API key?
+
+The app is designed so that the user-provided OpenAI API key is used only for the **active session**.
+
+The key is:
+
+- Not stored in Supabase
+- Not written to disk
+- Not saved in localStorage
+- Not committed to GitHub
+- Not shown in the UI after entry
+- Not added to the personal knowledge base
+- Sent only as a request header when Chat or JD-Fit analysis is used
+
+In the website version, the key is kept only in browser memory for that session. In the Hugging Face/Gradio version, it is kept only in the active Gradio session state.
+
+If the page is refreshed or the session is reset, the user may need to enter the key again.
+
+> Use your own OpenAI API key only if you are comfortable testing the live demo. If you are cloning the project, always configure your own backend secrets and never use someone else’s credentials.
 
 Never use someone else’s API key without permission.
 
@@ -180,7 +212,8 @@ It includes:
 - Recruiter Lead Capture
 - SendGrid Email Notification
 - Pushover Phone Notification
-- Optional Session-Level OpenAI API Key
+- Mandatory Session-Level User OpenAI API Key
+- Supabase Visitor and Question Analytics
 - Render Backend Deployment
 - Vercel Frontend Deployment
 - API Rate Limiting
@@ -314,18 +347,29 @@ This creates a proper notification workflow and keeps a written record of recrui
 
 ---
 
-### 8. Optional User API Key
+### 8. Mandatory User OpenAI API Key
 
-The app includes an option for a user to provide their own OpenAI API key for the active session.
+The public version of ShaileshGPT now requires users to provide their **own OpenAI API key** before using AI-powered features.
 
-This is useful for:
+This applies to:
 
-- Reducing owner-side API costs
-- Allowing advanced users to test with their own credits
-- Private/Local Demos
-- Responsible public usage
+- Chat
+- Suggestion questions
+- Recruiter JD-Fit analysis
 
-The key is session-only and should not be written to disk.
+This was added to control API costs and keep the demo available publicly without using the owner’s private OpenAI credits.
+
+The key is handled safely:
+
+- It is used only for the active browser/session flow
+- It is not stored in Supabase
+- It is not written to disk
+- It is not stored in localStorage
+- It is not saved in the analytics database
+- It is not committed to the repository
+- It is passed only as an API request header when needed
+
+Without entering a valid OpenAI API key, users cannot generate AI responses.
 
 ---
 
@@ -343,20 +387,75 @@ This turns the portfolio into a working AI product.
 
 ---
 
+### 10. Mandatory Visitor Access
+
+Before using ShaileshGPT, users are asked to enter basic visitor details.
+
+Required:
+
+- Name
+- Email
+
+Optional:
+
+- Phone
+- LinkedIn
+- GitHub
+- Website
+- Other contact route
+
+This helps understand who is exploring the product and creates a useful activity trail for portfolio insights, recruiter follow-ups, and product improvement.
+
+---
+
+### 11. Supabase Visitor and Question Analytics
+
+The project now includes Supabase-backed analytics.
+
+It records:
+
+- Visitor name
+- Visitor email
+- Optional contact details
+- Session source
+- Questions asked
+- JD-Fit analysis requests
+- Lead/contact submissions
+- Answer previews
+- Timestamps
+- Interaction channel
+
+The analytics database contains two main tables:
+
+```text
+visitors
+interactions
+```
+
+This makes the project more production-like because public usage is not only interactive but also measurable.
+
+---
+
+
+
 ## 🏗️ High-Level Architecture
 
 ```text
 User / Recruiter
    ↓
-React + Vite Portfolio Website
+Visitor Details + User OpenAI API Key
    ↓
-Floating ShaileshGPT Widget
+React + Vite Portfolio Website / Hugging Face Demo
+   ↓
+Floating ShaileshGPT Widget / Gradio App
    ↓
 FastAPI Backend
    ↓
+Supabase Visitor + Interaction Analytics
+   ↓
 Agentic RAG Pipeline
    ↓
-OpenAI Chat + Embeddings
+OpenAI Chat + Embeddings using User-Provided API Key
    ↓
 Personal Knowledge Base
    ↓
@@ -401,6 +500,7 @@ Built with:
 - pypdf
 - SendGrid via REST API
 - Pushover via REST API
+- Supabase REST API for visitor and interaction analytics
 
 Main backend responsibilities:
 
@@ -411,6 +511,10 @@ Main backend responsibilities:
 - Generate grounded responses
 - Analyze uploaded JDs
 - Capture leads
+- Register visitors
+- Log questions and JD-Fit activity
+- Store analytics in Supabase
+- Enforce user-provided API key flow for public usage
 - Send notifications
 - Rate-limit public API usage
 
@@ -448,6 +552,8 @@ A typical full project structure looks like this:
 │   ├── prepare_sources.py         # Prepares source documents
 │   ├── jd_matcher.py              # JD-fit analysis logic
 │   ├── lead_utils.py              # Pushover + SendGrid lead notification
+│   ├── analytics_db.py            # Visitor/session/question analytics storage
+│   ├── supabase_schema.sql        # Supabase database schema
 │   ├── widget.js                  # Optional standalone website widget
 │   ├── requirements.txt           # Python backend dependencies
 │   ├── runtime.txt                # Python version for Render
@@ -596,10 +702,25 @@ Create a `.env` file in the backend root.
 Example:
 
 ```env
-OPENAI_API_KEY=your_openai_api_key
+OPENAI_API_KEY=your_backend_openai_key_for_building_or_local_testing
 OPENAI_CHAT_MODEL=gpt-4.1-mini
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 
+# Public cost-control mode.
+# Set true when the frontend sends the user's key through x-openai-api-key.
+REQUIRE_USER_OPENAI_API_KEY=true
+
+# Supabase analytics
+ANALYTICS_STORAGE=supabase
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_VISITORS_TABLE=visitors
+SUPABASE_INTERACTIONS_TABLE=interactions
+
+# Admin analytics access
+ANALYTICS_ADMIN_TOKEN=choose_a_private_admin_token
+
+# Notifications
 PUSHOVER_USER=your_pushover_user_key
 PUSHOVER_TOKEN=your_pushover_app_token
 
@@ -607,6 +728,10 @@ SENDGRID_API_KEY=your_sendgrid_api_key
 SENDGRID_FROM_EMAIL=your_verified_sender_email@example.com
 LEAD_FROM_EMAIL=your_verified_sender_email@example.com
 LEAD_NOTIFY_EMAIL=your_email@example.com
+
+QUESTION_NOTIFY_ENABLED=true
+EMAIL_EACH_QUESTION=false
+NOTIFY_RETURNING_VISITORS=false
 
 RATE_LIMIT_REQUESTS=30
 RATE_LIMIT_WINDOW_SECONDS=3600
@@ -669,13 +794,37 @@ Add this to `.gitignore`:
 .env
 ```
 
-### Optional — Use Your Own Key in the App
+### Mandatory — Use Your Own Key in the Public App
 
-The UI includes an optional session key input.
+The public demo and website bot now require users to enter their own OpenAI API key before using Chat or JD-Fit analysis.
 
-This lets users run the conversation on their own OpenAI credits.
+This is intentional.
 
-If you are testing my deployed website and want to avoid using my API quota, you can use your own key through that option.
+A public AI app can quickly become expensive if every visitor uses the owner’s API key. To avoid uncontrolled cost, ShaileshGPT asks each user to run the AI part of the demo on their own OpenAI credits.
+
+### Is the entered key safe?
+
+The user-entered key is used only for the active session.
+
+It is:
+
+- Not stored in Supabase
+- Not written to disk
+- Not saved in localStorage
+- Not committed to GitHub
+- Not visible after entry
+- Not used for visitor analytics
+- Not added to the knowledge base
+
+The frontend sends the key to the backend only as a request header:
+
+```text
+x-openai-api-key
+```
+
+The backend then uses that key for the current chat or JD-Fit request.
+
+If you clone the project for yourself, you can decide whether to make user-provided keys mandatory or use your own protected backend key.
 
 ---
 
@@ -794,6 +943,112 @@ PUSHOVER_TOKEN=your_pushover_app_token
 ### Step 4 — Test Lead Capture
 
 Run the backend, open the app, submit contact details, and check whether your phone receives a notification.
+
+---
+
+## 🗄️ Supabase Analytics Setup
+
+Supabase is used to store visitor and interaction analytics.
+
+The current production-style tracking flow records:
+
+- visitor details
+- every question asked
+- JD-Fit analysis activity
+- lead/contact submissions
+- source/channel
+- timestamps
+- answer previews
+
+### Step 1 — Create a Supabase Project
+
+Go to:
+
+```text
+https://supabase.com/
+```
+
+Create a new project.
+
+### Step 2 — Get Project URL and Service Role Key
+
+Inside Supabase:
+
+```text
+Project Settings → API
+```
+
+Copy:
+
+```text
+Project URL
+Service Role Key
+```
+
+Use them in your backend environment:
+
+```env
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+Important:
+
+`SUPABASE_SERVICE_ROLE_KEY` is a private backend secret. Do not put it in React, Vite, frontend code, GitHub, README, screenshots, or public posts.
+
+### Step 3 — Create Tables
+
+Run the SQL inside:
+
+```text
+supabase_schema.sql
+```
+
+in:
+
+```text
+Supabase → SQL Editor → New Query
+```
+
+This creates:
+
+```text
+visitors
+interactions
+```
+
+### Step 4 — Add Analytics Environment Variables
+
+```env
+ANALYTICS_STORAGE=supabase
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_VISITORS_TABLE=visitors
+SUPABASE_INTERACTIONS_TABLE=interactions
+ANALYTICS_ADMIN_TOKEN=choose_a_private_admin_token
+```
+
+### Step 5 — View Analytics
+
+Open:
+
+```text
+Supabase → Table Editor → visitors
+Supabase → Table Editor → interactions
+```
+
+You can also use the protected analytics API:
+
+```text
+GET /analytics/summary
+GET /analytics/interactions.csv
+```
+
+Both require:
+
+```text
+x-admin-token: YOUR_ANALYTICS_ADMIN_TOKEN
+```
 
 ---
 
@@ -924,6 +1179,31 @@ Returns:
 
 ---
 
+### Visitor Registration
+
+```http
+POST /visitor/start
+```
+
+Registers a visitor before they can use the bot.
+
+Required:
+
+- name
+- email
+
+Optional:
+
+- phone
+- LinkedIn
+- GitHub
+- website
+- other contact route
+
+The visitor is saved in Supabase and receives a `visitor_id`.
+
+---
+
 ### Chat Stream
 
 ```http
@@ -977,6 +1257,40 @@ Then sends:
 - SendGrid email
 
 ---
+
+### Analytics Summary
+
+```http
+GET /analytics/summary
+```
+
+Returns recent visitors and interactions.
+
+Requires:
+
+```text
+x-admin-token: YOUR_ANALYTICS_ADMIN_TOKEN
+```
+
+---
+
+### Analytics CSV Export
+
+```http
+GET /analytics/interactions.csv
+```
+
+Exports recent interaction data as CSV.
+
+Requires:
+
+```text
+x-admin-token: YOUR_ANALYTICS_ADMIN_TOKEN
+```
+
+---
+
+
 
 ## 🌐 Frontend Setup Guide
 
@@ -1073,10 +1387,18 @@ uvicorn api_server:app --host 0.0.0.0 --port $PORT
 Add:
 
 ```env
-OPENAI_API_KEY=your_openai_api_key
+OPENAI_API_KEY=your_backend_openai_key_for_building_or_local_testing
 OPENAI_CHAT_MODEL=gpt-4.1-mini
 OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+REQUIRE_USER_OPENAI_API_KEY=true
 ALLOWED_ORIGINS=*
+
+ANALYTICS_STORAGE=supabase
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_VISITORS_TABLE=visitors
+SUPABASE_INTERACTIONS_TABLE=interactions
+ANALYTICS_ADMIN_TOKEN=choose_a_private_admin_token
 ```
 
 Optional:
@@ -1175,8 +1497,12 @@ After deployment, test the following:
 - [ ] website loads normally
 - [ ] ShaileshGPT section appears
 - [ ] floating chat button appears
-- [ ] chat streams responses
-- [ ] JD upload works
+- [ ] visitor registration requires name and email
+- [ ] Chat/JD Fit are blocked until user enters their own OpenAI API key
+- [ ] chat streams responses after user key is saved
+- [ ] JD upload works after user key is saved
+- [ ] Supabase `visitors` table records visitor details
+- [ ] Supabase `interactions` table records questions/JD activity
 - [ ] lead capture works
 - [ ] SendGrid email arrives
 - [ ] Pushover phone notification arrives
@@ -1332,7 +1658,44 @@ Fix:
 
 ---
 
-### 10. Social Preview Image Does Not Update
+### 10. Chat says user API key is required
+
+Cause:
+
+- Public cost-control mode is active
+- User has not entered their own OpenAI API key
+- Frontend is not sending `x-openai-api-key`
+- Backend has `REQUIRE_USER_OPENAI_API_KEY=true`
+
+Fix:
+
+- Enter a valid OpenAI API key in the UI
+- Confirm the frontend sends `x-openai-api-key`
+- Keep the key session-only
+- For local private testing, set `REQUIRE_USER_OPENAI_API_KEY=false` if needed
+
+---
+
+### 11. Supabase analytics does not record visitors or questions
+
+Possible causes:
+
+- `SUPABASE_URL` is incorrect
+- `SUPABASE_SERVICE_ROLE_KEY` is missing or wrong
+- `supabase_schema.sql` was not run
+- table names are incorrect
+- backend was not redeployed after env changes
+
+Fix:
+
+- `SUPABASE_URL` should look like `https://your-project-ref.supabase.co`
+- Do not include `/rest/v1` in `SUPABASE_URL`
+- Confirm tables `visitors` and `interactions` exist
+- Redeploy Render/Hugging Face after adding secrets
+
+---
+
+### 12. Social Preview Image Does Not Update
 
 Possible causes:
 
@@ -1352,13 +1715,16 @@ Fix:
 ## 🔒 Security Notes
 
 - Never commit `.env`
-- Never expose OpenAI keys in frontend code
+- Never expose backend OpenAI keys in frontend code
+- Never store user-provided OpenAI keys in Supabase or localStorage
+- Never put Supabase service role keys in frontend code
 - Never put SendGrid keys in React/Vite frontend
 - Keep API keys only on the backend
 - Use environment variables in Render/Vercel
 - Enable rate limiting
 - Keep lead-capture endpoints protected from abuse
 - Monitor usage and billing
+- Keep user-provided API keys session-only
 - Rotate keys if exposed accidentally
 
 ---
@@ -1377,7 +1743,7 @@ To control costs:
 - Keep JD analysis concise
 - Add authentication if scaling publicly
 
-The UI includes an optional OpenAI API key field so advanced users can run the session with their own key.
+The UI now includes a mandatory OpenAI API key field for public usage. Users must provide their own key to run Chat and JD-Fit analysis. The key is session-only and is not stored.
 
 ---
 
@@ -1422,7 +1788,7 @@ Possible upgrades:
 - Add login/authentication for admin mode
 - Add a dashboard to view submitted leads
 - Save conversation history to a database
-- Add analytics for most asked questions
+- Add richer analytics dashboards for most asked questions
 - Add admin UI to update knowledge base
 - Add automatic GitHub/blog ingestion
 - Add downloadable JD-fit reports
@@ -1443,7 +1809,7 @@ If you want to build your own version:
 3. Keep the architecture.
 4. Improve the UX.
 5. Add your own personality.
-6. Use your own API keys.
+6. Use your own backend secrets and require user-provided keys for public demos when needed.
 7. Deploy responsibly.
 8. Build something better.
 

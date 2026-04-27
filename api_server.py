@@ -6,13 +6,17 @@ import tempfile
 import time
 from collections import defaultdict, deque
 from pathlib import Path
+from io import BytesIO
 from typing import Generator
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import HTMLResponse, Response, StreamingResponse
 from pydantic import BaseModel
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 
 from agentic_rag import create_portfolio_bot, get_portfolio_bot
 from build_kb import main as build_kb_main
@@ -39,10 +43,7 @@ def require_user_api_key(request: Request) -> str:
         return ""
     key = request.headers.get("x-openai-api-key", "").strip()
     if not key:
-        raise HTTPException(
-            status_code=403,
-            detail="Please provide your own OpenAI API key to use this public demo."
-        )
+        raise HTTPException(status_code=403, detail="Please provide your own OpenAI API key to use this public demo.")
     if not key.startswith("sk-"):
         raise HTTPException(status_code=400, detail="Invalid OpenAI API key format.")
     return key
@@ -53,6 +54,40 @@ def bot_for_request(request: Request):
     if session_key:
         return create_portfolio_bot(CHAT_MODEL, EMBEDDING_MODEL, api_key=session_key)
     return BOT
+
+
+def _admin_authorized(request: Request) -> bool:
+    token = os.getenv("ANALYTICS_ADMIN_TOKEN", "").strip()
+    supplied = request.headers.get("x-admin-token", "").strip() or request.query_params.get("token", "").strip()
+    return bool(token and supplied == token)
+
+
+def _require_admin(request: Request) -> None:
+    if not _admin_authorized(request):
+        raise HTTPException(status_code=403, detail="Unauthorized")
+
+
+def build_jd_pdf_report(answer: str) -> bytes:
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, title="ShaileshGPT JD Fit Report")
+    styles = getSampleStyleSheet()
+    story = [Paragraph("ShaileshGPT JD Fit Report", styles["Title"]), Spacer(1, 14)]
+
+    for raw in (answer or "").split("\n"):
+        line = raw.strip()
+        if not line:
+            story.append(Spacer(1, 8))
+            continue
+        if line.startswith("#"):
+            story.append(Paragraph(line.replace("#", "").strip(), styles["Heading2"]))
+        else:
+            safe = line.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+            story.append(Paragraph(safe, styles["BodyText"]))
+            story.append(Spacer(1, 5))
+
+    doc.build(story)
+    return buffer.getvalue()
+
 
 RATE_LIMIT_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "30"))
 RATE_LIMIT_WINDOW_SECONDS = int(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "3600"))
@@ -116,6 +151,7 @@ class ChatRequest(BaseModel):
     message: str
     history: list[ChatMessage] = []
     visitor_id: str = ""
+    session_id: str = ""
 
 
 class LeadRequest(BaseModel):
@@ -136,6 +172,14 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/admin", response_class=HTMLResponse)
+def admin_dashboard() -> str:
+    path = ROOT / "admin_dashboard.html"
+    if not path.exists():
+        return "<h1>Admin dashboard file missing</h1>"
+    return path.read_text(encoding="utf-8")
+
+
 @app.post("/visitor/start")
 def visitor_start(payload: VisitorStartRequest, request: Request) -> dict[str, object]:
     enforce_rate_limit(request)
@@ -154,20 +198,14 @@ def visitor_start(payload: VisitorStartRequest, request: Request) -> dict[str, o
 
 @app.get("/analytics/summary")
 def analytics_summary(request: Request) -> dict[str, object]:
-    token = os.getenv("ANALYTICS_ADMIN_TOKEN", "").strip()
-    supplied = request.headers.get("x-admin-token", "").strip()
-    if not token or supplied != token:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    return export_summary(limit=200)
+    _require_admin(request)
+    return export_summary(limit=300)
 
 
 @app.get("/analytics/interactions.csv")
 def analytics_interactions_csv(request: Request) -> Response:
-    token = os.getenv("ANALYTICS_ADMIN_TOKEN", "").strip()
-    supplied = request.headers.get("x-admin-token", "").strip()
-    if not token or supplied != token:
-        raise HTTPException(status_code=403, detail="Unauthorized")
-    csv_text = export_interactions_csv(limit=1000)
+    _require_admin(request)
+    csv_text = export_interactions_csv(limit=2000)
     return Response(
         content=csv_text,
         media_type="text/csv",
@@ -190,6 +228,7 @@ def chat(payload: ChatRequest, request: Request) -> dict[str, str]:
         answer_preview=result.answer,
         channel="api",
         interaction_type="chat_question",
+        session_id=payload.session_id,
     )
     return {"answer": result.answer}
 
@@ -212,6 +251,7 @@ def chat_stream(payload: ChatRequest, request: Request) -> StreamingResponse:
                 payload.message,
                 channel="website_or_api_stream",
                 interaction_type="chat_question",
+                session_id=payload.session_id,
             )
             for token in bot_for_request(request).answer_stream(payload.message, chat_history=history):
                 collected.append(token)
@@ -249,6 +289,7 @@ async def jd_fit(
     file: UploadFile = File(...),
     question: str = Form("Evaluate Shailesh for this role."),
     visitor_id: str = Form(""),
+    session_id: str = Form(""),
 ) -> dict[str, str]:
     enforce_rate_limit(request)
     try:
@@ -270,8 +311,53 @@ async def jd_fit(
             channel="api_jd_fit",
             interaction_type="jd_fit_analysis",
             metadata={"filename": file.filename or "uploaded_jd"},
+            session_id=session_id,
         )
         return {"answer": answer}
+    finally:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except Exception:
+            pass
+
+
+@app.post("/jd_fit_report")
+async def jd_fit_report(
+    request: Request,
+    file: UploadFile = File(...),
+    question: str = Form("Evaluate Shailesh for this role."),
+    visitor_id: str = Form(""),
+    session_id: str = Form(""),
+) -> Response:
+    enforce_rate_limit(request)
+    try:
+        require_visitor(visitor_id)
+    except Exception as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+
+    suffix = Path(file.filename or "uploaded_jd.txt").suffix or ".txt"
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp.write(await file.read())
+        tmp_path = Path(tmp.name)
+
+    try:
+        jd_text = extract_text_from_upload(str(tmp_path))
+        answer = evaluate_jd_fit(bot_for_request(request), jd_text, question)
+        log_interaction(
+            visitor_id,
+            f"Downloadable JD report: {file.filename or 'uploaded_jd'} | Question: {question}",
+            answer_preview=answer,
+            channel="api_jd_pdf_report",
+            interaction_type="jd_fit_pdf_report",
+            metadata={"filename": file.filename or "uploaded_jd"},
+            session_id=session_id,
+        )
+        pdf_bytes = build_jd_pdf_report(answer)
+        return Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={"Content-Disposition": "attachment; filename=shaileshgpt_jd_fit_report.pdf"},
+        )
     finally:
         try:
             tmp_path.unlink(missing_ok=True)

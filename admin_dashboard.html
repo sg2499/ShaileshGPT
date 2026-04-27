@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>ShaileshGPT Admin Dashboard</title>
+  <style>
+    :root{--bg:#070b14;--card:#0c1222;--line:rgba(148,163,184,.18);--text:#f8fafc;--muted:#94a3b8;--blue:#60a5fa;--cyan:#22d3ee}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,sans-serif;background:radial-gradient(circle at top left,rgba(96,165,250,.18),transparent 36%),var(--bg);color:var(--text)}
+    .wrap{max-width:1240px;margin:0 auto;padding:28px}.hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}h1{margin:0;font-size:34px;letter-spacing:-.04em}p{color:var(--muted);line-height:1.6}
+    .card,.login{border:1px solid var(--line);background:rgba(12,18,34,.9);border-radius:24px;padding:18px;box-shadow:0 20px 60px rgba(0,0,0,.24)}
+    .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}.stat{border:1px solid var(--line);background:rgba(255,255,255,.04);border-radius:20px;padding:16px}.stat b{display:block;font-size:30px;margin-top:4px}
+    input,button{border-radius:14px;border:1px solid var(--line);padding:12px 14px;background:#09111f;color:var(--text)}button{cursor:pointer;background:linear-gradient(135deg,var(--blue),var(--cyan));border:none;color:#fff;font-weight:800}.ghost{background:rgba(255,255,255,.06);border:1px solid var(--line)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.tabs{display:flex;gap:10px;margin:18px 0;flex-wrap:wrap}.tab{background:rgba(255,255,255,.06);color:#cbd5e1}.tab.active{background:linear-gradient(135deg,var(--blue),var(--cyan));color:#fff}
+    table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:11px 10px;text-align:left;vertical-align:top}th{color:#cbd5e1;font-size:12px;text-transform:uppercase;letter-spacing:.08em}td{color:#e2e8f0}
+    .muted{color:var(--muted)}.pill{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 8px;color:#cbd5e1;background:rgba(255,255,255,.04);font-size:12px}pre{white-space:pre-wrap;word-break:break-word;color:#cbd5e1;margin:0;max-height:170px;overflow:auto}.hidden{display:none}
+    @media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.hero{display:block}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div><h1>ShaileshGPT Admin Dashboard</h1><p>Visitors, submitted leads, conversation history, most asked questions, and JD-fit activity.</p></div>
+    <div class="row"><button class="ghost" onclick="downloadCsv()">Export CSV</button><button onclick="loadData()">Refresh</button></div>
+  </div>
+
+  <div class="login" id="loginBox">
+    <div class="row"><input id="token" type="password" placeholder="Enter admin token" style="min-width:320px;flex:1"/><button onclick="saveToken()">Unlock Dashboard</button></div>
+    <p class="muted">Use the same value as <code>ANALYTICS_ADMIN_TOKEN</code>.</p>
+  </div>
+
+  <div id="dashboard" class="hidden">
+    <div class="grid">
+      <div class="stat"><span class="muted">Visitors</span><b id="countVisitors">0</b></div>
+      <div class="stat"><span class="muted">Interactions</span><b id="countInteractions">0</b></div>
+      <div class="stat"><span class="muted">Sessions</span><b id="countSessions">0</b></div>
+      <div class="stat"><span class="muted">Messages</span><b id="countMessages">0</b></div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('visitors',this)">Visitors</button>
+      <button class="tab" onclick="showTab('interactions',this)">Interactions</button>
+      <button class="tab" onclick="showTab('questions',this)">Most Asked Questions</button>
+      <button class="tab" onclick="showTab('messages',this)">Conversation Messages</button>
+    </div>
+    <div id="tab-visitors" class="card"></div>
+    <div id="tab-interactions" class="card hidden"></div>
+    <div id="tab-questions" class="card hidden"></div>
+    <div id="tab-messages" class="card hidden"></div>
+  </div>
+</div>
+<script>
+let adminToken=sessionStorage.getItem("sg_admin_token")||""; if(adminToken){document.getElementById("token").value=adminToken;loadData();}
+function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function saveToken(){adminToken=document.getElementById("token").value.trim();sessionStorage.setItem("sg_admin_token",adminToken);loadData()}
+async function fetchAnalytics(){const r=await fetch("/analytics/summary",{headers:{"x-admin-token":adminToken}});if(!r.ok)throw new Error(await r.text());return r.json()}
+async function loadData(){try{const d=await fetchAnalytics();document.getElementById("loginBox").classList.add("hidden");document.getElementById("dashboard").classList.remove("hidden");const c=d.counts||{};countVisitors.textContent=c.visitors??(d.visitors||[]).length;countInteractions.textContent=c.interactions??(d.interactions||[]).length;countSessions.textContent=c.sessions??(d.sessions||[]).length;countMessages.textContent=c.messages??(d.messages||[]).length;renderVisitors(d.visitors||[]);renderInteractions(d.interactions||[]);renderQuestions(d.top_questions||[]);renderMessages(d.messages||[])}catch(e){alert("Could not load dashboard. Check token and backend secrets.\n\n"+e.message)}}
+function renderVisitors(rows){document.getElementById("tab-visitors").innerHTML=`<h2>Recent Visitors</h2><table><thead><tr><th>Name</th><th>Email</th><th>Contact</th><th>Source</th><th>Last Seen</th></tr></thead><tbody>${rows.map(v=>`<tr><td>${esc(v.name)}</td><td>${esc(v.email)}</td><td><span class="muted">${esc(v.phone||v.linkedin||v.github||v.website||v.other_contact||"Not provided")}</span></td><td>${esc(v.source)}</td><td>${esc(v.last_seen_at||v.created_at)}</td></tr>`).join("")}</tbody></table>`}
+function renderInteractions(rows){document.getElementById("tab-interactions").innerHTML=`<h2>Recent Interactions</h2><table><thead><tr><th>Time</th><th>Visitor</th><th>Type</th><th>Question / Activity</th><th>Answer Preview</th></tr></thead><tbody>${rows.map(i=>`<tr><td>${esc(i.created_at)}</td><td>${esc(i.visitor_name)}<br><span class="muted">${esc(i.visitor_email)}</span></td><td><span class="pill">${esc(i.interaction_type)}</span></td><td><pre>${esc(i.question)}</pre></td><td><pre>${esc(i.answer_preview)}</pre></td></tr>`).join("")}</tbody></table>`}
+function renderQuestions(rows){document.getElementById("tab-questions").innerHTML=`<h2>Most Asked Questions</h2><table><thead><tr><th>Count</th><th>Question</th></tr></thead><tbody>${rows.map(q=>`<tr><td><b>${esc(q.count)}</b></td><td>${esc(q.question)}</td></tr>`).join("")}</tbody></table>`}
+function renderMessages(rows){document.getElementById("tab-messages").innerHTML=`<h2>Conversation Messages</h2><table><thead><tr><th>Time</th><th>Role</th><th>Session</th><th>Message</th></tr></thead><tbody>${rows.map(m=>`<tr><td>${esc(m.created_at)}</td><td><span class="pill">${esc(m.role)}</span></td><td><span class="muted">${esc(m.session_id)}</span></td><td><pre>${esc(m.content)}</pre></td></tr>`).join("")}</tbody></table>`}
+function showTab(name,btn){["visitors","interactions","questions","messages"].forEach(id=>document.getElementById("tab-"+id).classList.toggle("hidden",id!==name));document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active")}
+function downloadCsv(){if(!adminToken)return alert("Enter admin token first.");window.open("/analytics/interactions.csv?token="+encodeURIComponent(adminToken),"_blank")}
+</script>
+</body>
+</html>
